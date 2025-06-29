@@ -5,6 +5,19 @@ This document outlines the shared architectural foundations, data models, and de
 
 ---
 
+## Cross‑Stack Overview
+
+| Aspect | Django (🐍) | Node.js (🟨) | Java (☕) | Go (🟢) | .NET (🟣) |
+| --- | --- | --- | --- | --- | --- |
+| Retry Mechanism | Celery | Bull | Spring Retry | Asynq | Hangfire |
+| Auth Flow | Sequence 1.4.1 applies across | | | | |
+| Background Flow | Flowchart 1.4.3 applies generically | | | | |
+| Type Safety | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Performance | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Real‑time Support | Channels | WebSockets | STOMP | WebSockets | SignalR |
+| Jobs Broker | Celery | Bull | RabbitMQ | Asynq | Hangfire |
+| Deployment Complexity | ⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+
 ## 1. Shared API Specification
 
 All five technology stacks implement identical, versioned REST endpoints under the `/api/v1/*` namespace to guarantee a uniform interface. This consistency simplifies the development of SDKs, CLI tools, and enables safe version upgrades while maintaining identical behavior across implementations.
