@@ -1,6 +1,6 @@
 **API Playground: Multi‑Stack Architecture & Development Plan**
 
-*This document consolidates system design, architecture, and development planning for each of the five technology stacks described in **`tracker.md`**, **`Stacks.md`**, **`YellowPaper.md`**, and **`Models.md`**. Timelines are structured around a one‑stack‑per‑week schedule. Reference **`tracker.md`** for dependency breakdowns. This guide is exhaustive for implementation, architecture, design, and deployment.*
+*This document consolidates system design, architecture, and development planning for each of the five technology stacks described in `tracker.md`, `Stacks.md`, `YellowPaper.md`, and `Models.md`. Timelines are structured around a one‑stack‑per‑week schedule. Reference `tracker.md` for dependency breakdowns. This guide is exhaustive for implementation, architecture, design, and deployment.*
 
 ---
 
@@ -21,7 +21,7 @@ GET    /api/v1/logs/
 
 ### 1.2 Data Model Reference
 
-Refer to **`Models.md`** for detailed schema definitions of:
+Refer to `Models.md` for detailed schema definitions:
 
 * **Users** (`users`)
 * **Collections** (`collections`)
@@ -51,15 +51,16 @@ graph LR
     Cache[(Redis)]
     Storage[(S3 / MinIO)]
   end
+
   WebApp --> LB --> SSL --> API
   MobileApp --> LB --> SSL --> API
   API --> DB
   API --> Cache
   API --> MQ --> Cache
   API --> Storage
-  API <-- WS
-  WebApp <-- WS
-  MobileApp <-- WS
+  WS --> API
+  WS --> WebApp
+  WS --> MobileApp
 ```
 
 ---
@@ -136,11 +137,11 @@ graph TB
 
 #### 2.2 Component Responsibilities
 
-* **React/Vite**: UI for authentication, collections, endpoint creation, execution, and history. Uses Zustand for state and React Query for data fetching.
-* **Django + DRF**: Implements the shared REST spec, serializers, ViewSets, and custom middleware for logging and rate‑limiting.
-* **Services Layer**: Business logic encapsulated in Django apps: `authentication`, `collections`, `proxy`, `history`, `environments`.
-* **Celery**: Handles asynchronous request execution, retry logic, batch processing, and scheduled cleanup tasks.
-* **Redis**: Serves as both Celery broker and cache for rate limits and frequent lookups.
+* **React/Vite**: UI for authentication, collections, endpoint creation, execution, and history. Uses Zustand and React Query.
+* **Django + DRF**: Shared REST spec, serializers, ViewSets, custom middleware for logging and rate‑limiting.
+* **Services Layer**: Django apps: `authentication`, `collections`, `proxy`, `history`, `environments`.
+* **Celery**: Asynchronous execution, retry logic, batch jobs, scheduled cleanup.
+* **Redis**: Broker for Celery, cache store, rate‑limiting.
 
 #### 2.3 DDD Folder Structure
 
@@ -168,7 +169,7 @@ api_playground/
 
 #### 2.4 Database Schema & ER Diagram
 
-See **`Models.md`** for complete ER diagrams. Key tables:
+Refer to `Models.md` for full ER diagrams. Key tables:
 
 * `users` (UUID PK, email, hashed password)
 * `collections` (UUID PK, owner FK)
@@ -177,23 +178,23 @@ See **`Models.md`** for complete ER diagrams. Key tables:
 
 #### 2.5 Service & Background Task Flows
 
-* **execute\_api\_request**: Enqueued by API, processed by Celery Worker, logs to `request_logs`.
-* **cleanup\_tasks**: Scheduled via Celery Beat to purge old logs and temporary data.
-* **notifications**: Triggered on share events, sent via SMTP.
+* **execute\_api\_request**: Queues HTTP calls in Celery, logs in `request_logs`.
+* **cleanup\_tasks**: Celery Beat schedules data purges.
+* **notifications**: Email via SMTP on share events.
 
 #### 2.6 Auth & Security Patterns
 
-* **JWT**: Access tokens (15 min) and refresh tokens (7 days) with rotation.
-* **Rate Limiting**: 10 requests/min per user via Redis; 5 auth attempts/min per IP.
-* **SSRF Protection**: URL validator blocks private IP ranges.
-* **CORS**: Restricted to allowed origins in production.
+* **JWT**: Access (15 min) & Refresh (7 days), with rotation.
+* **Rate Limiting**: Redis-based per-user and per-IP limits.
+* **SSRF Protection**: Block private network ranges.
+* **CORS**: Enforced origin whitelist.
 
 #### 2.7 API Design Conventions
 
-* Versioned endpoints under `/api/v1/`.
-* Standard response: `{ status, data, message, timestamp }`.
-* Pagination via `PageNumberPagination` (default page size 20).
-* Centralized error handling in custom middleware.
+* `/api/v1/` versioned routes.
+* Response envelope: `{ status, data, message, timestamp }`.
+* Pagination: `PageNumberPagination` (default 20).
+* Centralized error handling.
 
 #### 2.8 Frontend Architecture
 
@@ -207,30 +208,29 @@ src/
 │   ├── execution/
 │   └── history/
 ├── hooks/
-├── services/   # Axios wrappers
-├── stores/     # Zustand
-├── utils/
+├── services/  # Axios wrappers
+├── stores/    # Zustand
 └── pages/
 ```
 
 #### 2.9 Deployment Topology
 
-* **Dev**: Docker Compose brings up Django, React, Redis, Postgres locally.
-* **Prod**: Kubernetes (EKS/ECS) with AWS ALB → Django Gunicorn, React served via CDN.
-* Services: RDS (PostgreSQL), ElastiCache (Redis), S3 (asset storage).
+* **Dev**: Docker Compose (Django, React, Redis, Postgres).
+* **Prod**: AWS EKS/ECS with ALB → Gunicorn, React CDN.
+* RDS (Postgres), ElastiCache (Redis), S3 storage.
 
 #### 2.10 Performance & Caching Strategies
 
-* Multi‑layer caching (local memory + Redis).
-* DB optimizations: `select_related`, `prefetch_related`, indices on FKs and timestamps.
-* Celery concurrency tuning based on worker type.
+* Local + Redis caching.
+* DB: optimized joins, indices.
+* Celery: worker concurrency tuning.
 
 #### 2.11 Testing Strategy
 
-* **Unit**: `pytest-django` targeting 80% coverage.
-* **Integration**: DRF `APITestCase` with external API mocks.
-* **E2E**: Playwright scripts covering critical flows.
-* **Load Testing**: Locust simulating up to 1 k users.
+* **Unit**: `pytest-django` (80% coverage).
+* **Integration**: DRF `APITestCase`.
+* **E2E**: Playwright.
+* **Load**: Locust (1 k users).
 
 ---
 
@@ -241,7 +241,7 @@ src/
 ```mermaid
 graph TB
   subgraph Client
-    NextJS[Next.js (React)]
+    NextJS["Next.js (React)"]
   end
   subgraph Gateway
     Nginx[Nginx]
@@ -253,12 +253,12 @@ graph TB
     MQ[Bull Queue]
   end
   subgraph Workers
-    Jobs[RequestJobs Processor]
-    Cleanup[CleanupJobs Processor]
+    Jobs[RequestJobs]
+    Cleanup[CleanupJobs]
   end
   subgraph Data
     PG[(PostgreSQL)]
-    RD[(Redis Cache)]
+    RD[(Redis)]
   end
 
   NextJS --> Nginx --> Express
@@ -272,22 +272,22 @@ graph TB
 
 #### 2.2 Component Responsibilities
 
-* **Next.js**: UI and Server Components; handles page rendering and API routes for auth, collections, endpoints.
-* **Express.js**: Dedicated microservice for heavy request execution and logging.
-* **Passport.js**: JWT authentication strategy.
-* **Prisma ORM**: Type-safe database client and migrations.
-* **Bull**: Redis-backed job queue for asynchronous tasks and retries.
+* **Next.js**: UI + Server Components; page rendering and API routes for auth, collections, endpoints.
+* **Express.js**: Microservice for request execution & logging.
+* **Passport.js**: JWT auth strategy.
+* **Prisma ORM**: Type-safe client, migrations.
+* **Bull**: Redis-backed queue for async jobs.
 
 #### 2.3 DDD Folder Structure
 
 ```
 node-playground/
 ├── src/
-│   ├── pages/api/       # Next.js API routes
+│   ├── pages/api/
 │   ├── components/
-│   ├── lib/             # Prisma client, auth utils
-│   ├── services/        # Business logic modules
-│   └── jobs/            # Bull processors
+│   ├── lib/         # Prisma, auth
+│   ├── services/
+│   └── jobs/
 ├── prisma/
 │   └── schema.prisma
 └── public/
@@ -295,42 +295,41 @@ node-playground/
 
 #### 2.4 Database Schema & ER Diagram
 
-Matches **`Models.md`**; Prisma schema generates tables for users, collections, endpoints, logs, teams.
+Matches `Models.md`, generated by Prisma schema.
 
 #### 2.5 Service & Background Task Flows
 
-* **executeJob**: Queues HTTP execution job, logs response.
-* **batchCleanup**: Removes outdated logs on schedule.
+* **executeJob**: Enqueue HTTP execution.
+* **batchCleanup**: Scheduled log cleanup.
 
 #### 2.6 Auth & Security Patterns
 
-* JWT tokens managed by NextAuth or Passport credentials provider.
-* Rate limiting via `express-rate-limit` backed by Redis.
+* JWT via NextAuth or Passport.
+* Rate limiting with `express-rate-limit` + Redis.
 
 #### 2.7 API Design Conventions
 
-* Standard envelope: `{ status, result, error }`.
-* Request/response validation via Zod schemas.
+* Envelope: `{ status, result, error }`.
+* Zod validation for inputs.
 
 #### 2.8 Frontend Architecture
 
-* App Router (Next.js), React Query for data, Zustand for state, Tailwind CSS for styling.
+Next.js App Router, React Query, Zustand, Tailwind.
 
 #### 2.9 Deployment Topology
 
-* Next.js deployed on Vercel.
-* Express microservice deployed via Docker on ECS.
-* Infra: RDS Postgres, ElastiCache Redis.
+* Vercel (Next.js), ECS (Express).
+* RDS Postgres, ElastiCache Redis.
 
 #### 2.10 Performance & Caching Strategies
 
-* ISR (Incremental Static Regeneration) for pages.
-* Redis for session store and caching frequent queries.
+* ISR for pages.
+* Redis for sessions & cache.
 
 #### 2.11 Testing Strategy
 
-* **Unit & Integration**: Jest + Supertest.
-* **E2E**: Playwright.
+* Jest + Supertest (unit/integration).
+* Playwright (E2E).
 
 ---
 
@@ -380,7 +379,7 @@ graph TB
 * **Spring Boot**: Layered architecture (Controller → Service → Repository) with Maven/Gradle build.
 * **Spring Security**: JWT authentication filter chain.
 * **Hibernate/JPA**: Entity mappings, Flyway for DB migrations.
-* **RabbitMQ**: Asynchronous job transport for request execution.
+* **RabbitMQ**: Async jobs for request execution.
 * **Redis**: Caching and rate‑limiting store.
 
 #### 2.3 DDD Folder Structure
@@ -402,25 +401,25 @@ spring-playground/
 
 #### 2.4 Database Schema & ER Diagram
 
-Follows **`Models.md`** with JPA annotations (`@Entity`, `@OneToMany`, `@ManyToOne`).
+Refer to `Models.md`. Entities annotated with `@Entity`, relationships via `@OneToMany`, `@ManyToOne`.
 
 #### 2.5 Service & Background Task Flows
 
-* **RequestExecutionService**: Uses `WebClient` for HTTP calls, persists logs.
-* **ScheduledJobs**: Cleanup and notification using `@Scheduled`.
+* **RequestExecutionService**: Uses `WebClient` for HTTP calls, logs to DB.
+* **ScheduledJobs**: Cleanup and notifications via `@Scheduled`.
 * **WebSocket Events**: Real-time updates via STOMP.
 
 #### 2.6 Auth & Security Patterns
 
-* JWT tokens via custom filter and provider.
-* CSRF disabled for API; CORS restricted by origin.
-* Rate limiting via Bucket4j.
+* **JWT**: Custom filter & token provider.
+* **CSRF**: Disabled for API; strict CORS.
+* **Rate Limiting**: Bucket4j integration.
 
 #### 2.7 API Design Conventions
 
-* DTO mapping via MapStruct.
-* Global error handling with `@ControllerAdvice`.
-* OpenAPI documentation via SpringDoc.
+* DTOs via MapStruct.
+* Error handling with `@ControllerAdvice`.
+* OpenAPI docs via SpringDoc.
 
 #### 2.8 Frontend Architecture
 
@@ -442,12 +441,12 @@ projects/angular-client/
 #### 2.10 Performance & Caching Strategies
 
 * Hibernate 2nd-level cache with Redis.
-* Read replicas and DB indexing.
-* Tuning RabbitMQ consumer concurrency.
+* Read replicas and indices.
+* RabbitMQ consumer tuning.
 
 #### 2.11 Testing Strategy
 
-* **Unit**: JUnit 5, Mockito.
+* **Unit**: JUnit 5 + Mockito.
 * **Integration**: TestContainers for Postgres & RabbitMQ.
 * **E2E**: Cypress.
 
@@ -476,7 +475,8 @@ graph TB
     ColMgmt[Collection Service]
   end
   subgraph Workers
-    Asynq[Asynq (Redis)]
+    Asynq[Asynq]
+    Redis[Redis]
   end
   subgraph Data
     PG[(PostgreSQL)]
@@ -485,78 +485,79 @@ graph TB
   SvelteKit --> Nginx --> SSL --> Fiber
   Fiber --> JWT
   Fiber --> Validator
-  Fiber --> ReqExec & ColMgmt
+  Fiber --> ReqExec
+  Fiber --> ColMgmt
   ReqExec --> Asynq --> Redis
-  Fiber --> PG
+  ColMgmt --> PG
 ```
 
 #### 2.2 Component Responsibilities
 
-* **SvelteKit**: Server-side rendering, client routing, Skeleton UI for fast load.
-* **Fiber**: High-performance REST handlers with middleware for logging, auth, rate-limit.
-* **Asynq**: Redis-backed job queue for request execution and cleanup.
-* **GORM**: Model definitions and migrations via `golang-migrate`.
-* **Validator**: Struct-based input validation.
+* **SvelteKit**: SSR and client routing with Skeleton UI.
+* **Fiber**: REST handlers with auth, logging, rate-limit middleware.
+* **Asynq**: Job queue with Redis for background execution.
+* **GORM**: Data models and migrations.
+* **Validator**: Request validation via struct tags.
 
 #### 2.3 DDD Folder Structure
 
 ```
 go-playground/
-├── cmd/            # main.go entrypoint
+├── cmd/
 ├── internal/
-│   ├── api/        # HTTP handlers
-│   ├── service/    # Business logic
-│   ├── model/      # GORM models
-│   ├── worker/     # Asynq tasks
-│   └── config/     # Viper config
-└── web/            # SvelteKit frontend
+│   ├── api/
+│   ├── service/
+│   ├── model/
+│   ├── worker/
+│   └── config/
+└── web/
 ```
 
 #### 2.4 Database Schema & ER Diagram
 
-Mirrors **`Models.md`**, migrations stored in `migrations/`.
+Matches `Models.md`; migrations in `migrations/`.
 
 #### 2.5 Service & Background Task Flows
 
-* **ExecuteTask**: Asynq worker performs HTTP calls and logs.
-* **CleanupTask**: Scheduled retention policy enforcement.
+* **ExecuteTask**: Asynq performs HTTP requests and logs.
+* **CleanupTask**: Scheduled retention enforcement.
 
 #### 2.6 Auth & Security Patterns
 
-* JWT authentication middleware with token claims.
-* Rate limiting via Go's `rate.Limiter` and Redis.
+* JWT via middleware.
+* Rate limiting via Go's `rate.Limiter` + Redis.
 
 #### 2.7 API Design Conventions
 
-* JSON response envelope with versioned routes.
-* Input validation via struct tags.
+* Versioned JSON envelope.
+* Input struct validation.
 
 #### 2.8 Frontend Architecture
 
 ```
 web/
 ├── src/routes/
-├── src/lib/      # stores, services
+├── src/lib/
 ├── src/components/
 └── svelte.config.js
 ```
 
 #### 2.9 Deployment Topology
 
-* Docker scratch binary for minimal footprint.
-* Kubernetes with Horizontal Pod Autoscaler.
-* Metrics exported to Prometheus.
+* Docker scratch images.
+* Kubernetes HPA.
+* Metrics to Prometheus.
 
 #### 2.10 Performance & Caching Strategies
 
-* Prepared statements and connection pooling.
-* LRU in-memory cache for hot data plus Redis.
-* Goroutine pools for request execution.
+* Connection pooling, prepared statements.
+* LRU + Redis caching.
+* Goroutine pool management.
 
 #### 2.11 Testing Strategy
 
-* **Unit**: Testify, GoMock.
-* **Integration**: Docker Postgres for CI tests.
+* **Unit**: Testify + GoMock.
+* **Integration**: Docker Postgres CI tests.
 * **E2E**: Playwright.
 
 ---
@@ -598,67 +599,67 @@ graph TB
 
 #### 2.2 Component Responsibilities
 
-* **Blazor / React**: SPA UIs using Fluxor or Redux for state management.
-* **ASP.NET Core**: Controllers, MediatR for CQRS pattern, built-in DI container.
-* **ASP.NET Identity / JWT**: User management and token issues.
-* **Hangfire**: Background job scheduling and retries.
-* **EF Core**: Data access layer with Fluent API configuration.
+* **Blazor/React**: SPA UI with Fluxor or Redux.
+* **ASP.NET Core**: Controllers, MediatR, DI.
+* **Identity/JWT**: Authentication.
+* **Hangfire**: Background jobs.
+* **EF Core**: Data access.
 
 #### 2.3 DDD Folder Structure
 
 ```
 dotnet-playground/
 ├── src/
-│   ├── Api/           # Controllers, Startup configuration
-│   ├── Application/   # Services, DTOs, MediatR handlers
-│   ├── Domain/        # Entity definitions
-│   ├── Infrastructure/# EF Core, Hangfire, Logging
-│   └── WebUI/         # Blazor or React client project
+│   ├── Api/
+│   ├── Application/
+│   ├── Domain/
+│   ├── Infrastructure/
+│   └── WebUI/
 └── tests/
 ```
 
 #### 2.4 Database Schema & ER Diagram
 
-Follow **`Models.md`**; EF entities configured via Fluent API and migrations.
+Follow `Models.md`; EF Fluent API.
 
 #### 2.5 Service & Background Task Flows
 
-* **RequestExecutor**: Uses `HttpClientFactory` for external calls, logs to DB.
-* **RecurringJobs**: Cleanup and notification tasks visible in Hangfire Dashboard.
+* **RequestExecutor**: `HttpClientFactory` calls.
+* **RecurringJobs**: Hangfire tasks.
 
 #### 2.6 Auth & Security Patterns
 
-* JWT Bearer middleware for API protection.
-* Role-based policies using ASP.NET Core Authorization.
-* Rate limiting via `AspNetCoreRateLimit` middleware.
+* JWT Bearer middleware.
+* Role-based policies.
+* Rate limiting via `AspNetCoreRateLimit`.
 
 #### 2.7 API Design Conventions
 
-* Errors returned according to RFC 7807 Problem Details.
-* Versioning through URL segment (e.g., `/v1/...`).
+* RFC 7807 Problem Details.
+* URL versioning.
 
 #### 2.8 Frontend Architecture
 
-* **Blazor**: `.razor` components with DI-provided services.
-* **React**: Redux Toolkit, RTK Query for data fetching.
+* Blazor `.razor` components.
+* React Redux Toolkit + RTK Query.
 
 #### 2.9 Deployment Topology
 
-* Azure App Service for WebUI and API.
-* SQL Server on Azure SQL or AWS RDS.
-* Redis Cache via Azure Cache for Redis.
-* Monitoring and logging in Application Insights.
+* Azure App Service + AKS.
+* Azure SQL / RDS.
+* Azure Cache for Redis.
+* Application Insights.
 
 #### 2.10 Performance & Caching Strategies
 
-* In‑memory caching with `IMemoryCache` and `IDistributedCache` backed by Redis.
-* EF Core compiled queries and connection pooling.
+* In-memory + Redis cache.
+* EF compiled queries.
 
 #### 2.11 Testing Strategy
 
 * **Unit**: xUnit + Moq.
-* **Integration**: `Microsoft.AspNetCore.TestHost` for in-memory server tests.
-* **E2E**: Playwright tests against deployed environments.
+* **Integration**: TestHost.
+* **E2E**: Playwright.
 
 ---
 
