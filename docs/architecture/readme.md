@@ -1,414 +1,260 @@
 
-# Common Foundations for API Playground
+# API Playground - Architecture Overview
 
-This document outlines the shared architectural foundations, data models, and design principles that underpin the API Playground application across all five technology stacks. These common elements ensure consistency in functionality, user experience, and API behavior, regardless of the underlying technology.
+This document serves as the central point for understanding the architecture of the API Playground application across its various technology stack implementations. It provides links to detailed architecture documents for each stack, outlines shared principles, and offers a comparative overview.
 
----
-
-## Cross‑Stack Overview
-
-| Aspect | Django (🐍) | Node.js (🟨) | Java (☕) | Go (🟢) | .NET (🟣) |
-| --- | --- | --- | --- | --- | --- |
-| Retry Mechanism | Celery | Bull | Spring Retry | Asynq | Hangfire |
-| Auth Flow | Sequence 1.4.1 applies across | | | | |
-| Background Flow | Flowchart 1.4.3 applies generically | | | | |
-| Type Safety | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Performance | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Real‑time Support | Channels | WebSockets | STOMP | WebSockets | SignalR |
-| Jobs Broker | Celery | Bull | RabbitMQ | Asynq | Hangfire |
-| Deployment Complexity | ⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-
-## 1. Shared API Specification
-
-All five technology stacks implement identical, versioned REST endpoints under the `/api/v1/*` namespace to guarantee a uniform interface. This consistency simplifies the development of SDKs, CLI tools, and enables safe version upgrades while maintaining identical behavior across implementations.
-
-| Method | Route                                   | Description                       |
-|--------|-----------------------------------------|-----------------------------------|
-| POST   | `/api/v1/auth/register`                | User registration                 |
-| POST   | `/api/v1/auth/login`                   | User authentication               |
-| GET    | `/api/v1/collections/`                 | List all collections              |
-| POST   | `/api/v1/collections/{collection_id}/endpoints/` | Create an endpoint within a collection |
-| POST   | `/api/v1/test/{endpoint_id}/`          | Execute a test call               |
-| GET    | `/api/v1/logs/`                        | Retrieve execution logs           |
-
-**Justification:** A uniform API interface across stacks ensures that client applications can interact with any backend implementation without modification. This approach also facilitates cross-stack testing and interoperability.
+The primary sources of truth for requirements and technology choices are:
+-   `docs/YellowPaper.md`: Defines the overall project, its features, and acceptance criteria.
+-   `docs/Stacks.md`: Specifies the precise technologies for each implemented stack.
+-   `docs/Endpoints.md`: Details the common API specification.
 
 ---
 
-## 2. Data Model Reference
+## Table of Contents
 
-The core data model is consistent across all stacks to maintain functional parity. For full schema definitions, refer to the supplementary `Models.md` document. Below is an overview of the core entities and their relationships:
+-   [1. Implemented Technology Stacks](#1-implemented-technology-stacks)
+-   [2. Shared Design Principles](#2-shared-design-principles)
+-   [3. High-Level System Architecture](#3-high-level-system-architecture)
+-   [4. Data Model Overview](#4-data-model-overview)
+-   [5. Core Workflow Diagrams](#5-core-workflow-diagrams)
+    -   [5.1. Authentication Handshake](#51-authentication-handshake)
+    -   [5.2. API Request Execution Flow (Simplified)](#52-api-request-execution-flow-simplified)
+-   [6. Technology Stack Comparison](#6-technology-stack-comparison)
 
-| Entity            | Table               | Key Fields / Relations                              |
-|-------------------|---------------------|----------------------------------------------------|
-| Users             | `users`            | `id` (UUID PK), `email`, `password_hash`, timestamps |
-| Collections       | `collections`      | `id` (UUID PK), `owner_id` FK → `users.id`, `name`, `created_at` |
-| Endpoints         | `endpoints`        | `id` (UUID PK), `collection_id` FK → `collections.id`, `schema` (JSONB) |
-| Request Logs      | `request_logs`     | `id` (UUID PK), `endpoint_id` FK → `endpoints.id`, `status`, `timestamp` |
-| Teams & Shares    | `teams`, `team_members`, `collection_shares` | Collaboration tables linking users and collections |
+---
 
-### Data Model Class Diagram
+## 1. Implemented Technology Stacks
+
+Detailed architecture for each implemented stack can be found in their respective documents:
+
+-   **Python/Django + React:** [`./django.md`](./django.md)
+-   **C#/.NET + Blazor WASM:** [`./dotnet.md`](./dotnet.md)
+-   **Node.js/TypeScript (Express.js + Next.js):** [`./next.md`](./next.md)
+-   **Java/Spring Boot + Angular:** [`./springboot.md`](./springboot.md)
+
+*Note: The Go stack mentioned in previous versions of this document is not part of the currently defined implementations in `docs/Stacks.md`.*
+
+---
+
+## 2. Shared Design Principles
+
+These principles, derived primarily from `docs/YellowPaper.md`, guide the development of all stack implementations to ensure consistency and quality:
+
+-   **Consistency:** All stacks must implement the features and API endpoints (`docs/Endpoints.md`) as defined in `docs/YellowPaper.md` to ensure identical functionality and user experience.
+-   **Modularity:** Codebases should be organized logically (e.g., following Domain-Driven Design principles where appropriate, or standard conventions for the framework) to promote maintainability and separation of concerns.
+-   **Security:**
+    -   Robust authentication (JWT-based) and authorization mechanisms are mandatory.
+    -   Rate limiting must be implemented to prevent abuse.
+    -   Input validation is critical on all incoming data.
+    -   Protection against common web vulnerabilities (XSS, CSRF, SSRF) must be considered and implemented.
+-   **Simplified Task Processing (Initial Scope):** As per `docs/Stacks.md`, complex background task queues (Celery, RabbitMQ, Bull, Hangfire) are deferred. Initial implementations will use simpler, in-process asynchronous mechanisms native to each stack (e.g., Spring `@Async`, ASP.NET `BackgroundService`, Django `BackgroundTasks`, simple Node.js async patterns).
+-   **Performance:** While full optimization is iterative, applications should be responsive. API response times and frontend load times are key considerations (see `YellowPaper.md` for targets).
+-   **Testability:** Each stack must include a comprehensive testing strategy, covering unit, integration, and (conceptually) end-to-end tests.
+-   **Containerization:** All implementations are designed to be deployed via Docker containers, as outlined in `docs/YellowPaper.md`.
+-   **API Documentation:** Each backend API must be documented using OpenAPI 3.0 standards (e.g., Swashbuckle, drf-spectacular, SpringDoc, Swagger JSDoc).
+-   **Database:** PostgreSQL 15 is the shared relational database.
+-   **Configuration:** Sensitive configurations should be managed via environment variables.
+
+---
+
+## 3. High-Level System Architecture
+
+The general system architecture applies conceptually to all stacks, with specific tooling varying.
 
 ```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  },
-  'flowchart': {
-    'nodeSpacing': 30,
-    'rankSpacing': 50,
-    'curve': 'basis'
-  }
-}}%%
+%%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
+graph TD
+    A[User] --> B{Frontend SPA};
+    B --> C{API Gateway / Reverse Proxy};
+    C --> D[Backend API Service (Stack Specific)];
+    D --> E[Shared PostgreSQL Database];
+    D -.-> F[(Optional) Shared Redis Cache];
+    D -- In-Process Async --> G((External API Call));
+    D --> H[Logging Service/Mechanism];
 
+    subgraph "Client Layer"
+        B
+    end
+    subgraph "Gateway/CDN Layer"
+        C
+    end
+    subgraph "Application Layer (Stack Specific Implementation)"
+        D
+        G
+        H
+    end
+    subgraph "Data Layer (Shared)"
+        E
+        F
+    end
+
+    style A fill:#c9d1d9,stroke:#768390
+    style B fill:#ff9e64,stroke:#ff7043
+    style C fill:#73daca,stroke:#41a6b5
+    style D fill:#e0af68,stroke:#d19a66
+    style E fill:#9ece6a,stroke:#73b25a
+    style F fill:#a5d6ff,stroke:#89bde8
+    style G fill:#f7768e,stroke:#db5a6b
+    style H fill:#bb9af7,stroke:#9d7cd8
+```
+**Key Components:**
+-   **Frontend SPA:** Single Page Application specific to each stack (React, Blazor WASM, Next.js, Angular).
+-   **API Gateway/Reverse Proxy:** (e.g., Nginx) Manages incoming requests, SSL termination, load balancing (if applicable), and routing to the appropriate backend service. Serves static frontend assets.
+-   **Backend API Service:** The core application logic, implemented in one of the four defined technology stacks. Handles business logic, authentication, and interaction with the data layer.
+-   **Shared PostgreSQL Database:** The primary data store for all stacks.
+-   **Shared Redis Cache (Optional):** Used for rate limiting (if distributed) or general caching.
+-   **External API Call:** Represents the execution of user-defined API requests to third-party services.
+-   **Logging Service/Mechanism:** For recording application events, errors, and request history.
+
+**Note on Background Workers:** The "Background Workers" concept from `YellowPaper.md` is simplified in the initial implementations to in-process asynchronous tasks within the Backend API Service.
+
+---
+
+## 4. Data Model Overview
+
+The core data model is consistent across all stacks to ensure functional parity and is primarily defined by the requirements in `docs/YellowPaper.md` and the API specification in `docs/Endpoints.md`. Key entities include:
+
+-   **User:** Represents registered users of the platform.
+    -   Key attributes: `id`, `email`, `password_hash`, `first_name`, `last_name`, timestamps.
+-   **Collection:** A group of saved API endpoints belonging to a user.
+    -   Key attributes: `id`, `user_id` (FK to User), `name`, `description`, `is_public`, `tags`, timestamps.
+-   **Endpoint:** A saved API request definition within a collection.
+    -   Key attributes: `id`, `collection_id` (FK to Collection), `name`, `method`, `url`, `headers`, `query_params`, `body_type`, `body_content`, `timeout_seconds`, `auth_config`, `pre_request_script`, `post_request_script`, timestamps.
+-   **RequestLog:** Records the history of executed API requests.
+    -   Key attributes: `id`, `user_id` (FK to User), `endpoint_id` (FK to Endpoint, nullable for ad-hoc requests), `method`, `url`, `request_headers`, `request_body`, `status_code`, `response_headers`, `response_body`, `duration_ms`, `response_size_bytes`, `executed_at`.
+
+A simplified conceptual class diagram:
+```mermaid
+%%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
 classDiagram
+    User "1" -- "*" Collection : owns
+    Collection "1" -- "*" Endpoint : contains
+    User "1" -- "*" RequestLog : has
+    Endpoint "0..1" -- "*" RequestLog : logs (optional)
+
     class User {
       +UUID id
       +String email
       +String password_hash
-      +DateTime created_at
+      +String first_name
+      +String last_name
     }
     class Collection {
       +UUID id
-      +UUID owner_id
+      +UUID user_id
       +String name
-      +DateTime created_at
+      +String description
     }
     class Endpoint {
       +UUID id
       +UUID collection_id
-      +Object schema
+      +String name
+      +String method
+      +String url
+      +Json details (headers, body, etc.)
     }
     class RequestLog {
       +UUID id
-      +UUID endpoint_id
-      +String status
-      +DateTime timestamp
+      +UUID user_id
+      +UUID endpoint_id (nullable)
+      +String method
+      +String url
+      +Json request_details
+      +Json response_details
+      +Int status_code
+      +Int duration_ms
     }
-    User "1" -- "*" Collection : owns
-    Collection "1" -- "*" Endpoint : contains
-    Endpoint "1" -- "*" RequestLog : logs
 ```
-
-**Note:** The use of UUIDs as primary keys ensures uniqueness across distributed systems, while JSONB for endpoint schemas provides flexibility for storing dynamic API configurations.
+*Detailed ER diagrams and model definitions are available in each stack-specific architecture document.*
 
 ---
 
-## 3. High-Level Architecture
+## 5. Core Workflow Diagrams
 
-The overarching architecture is designed to be modular and scalable, with clear separation of concerns across client, gateway, application, and data layers. This high-level design is implemented consistently across all stacks, with specific tools and technologies adapted to each stack's ecosystem.
+These diagrams illustrate key workflows common to all stacks, adapted for the simplified initial implementations.
 
+### 5.1. Authentication Handshake
+
+(As per `YellowPaper.md` JWT Strategy)
 ```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  },
-  'flowchart': {
-    'nodeSpacing': 30,
-    'rankSpacing': 50,
-    'curve': 'basis'
-  }
-}}%%
-
-flowchart TB
-    subgraph High_Level_Architecture["High-Level Architecture"]
-        subgraph Client_Layer["Client Layer"]
-            direction LR
-            WebApp["🌐 Web App"] ~~~ MobileApp["📱 Mobile App"]
-        end
-        
-        subgraph API_Gateway["API Gateway"]
-            direction LR
-            LB["⚖️ Nginx / Load Balancer"] ~~~ SSL["🔒 SSL Termination"]
-        end
-        
-        subgraph Application_Layer["Application Layer"]
-            direction LR
-            API["🔌 REST API"] ~~~ WS["🔄 WebSocket Server"] ~~~ MQ["📤 Background Workers"]
-        end
-        
-        subgraph Data_Layer["Data Layer"]
-            direction LR
-            DB["🗄️ PostgreSQL / SQL Server"] ~~~ Cache["⚡ Redis"] ~~~ Storage["☁️ S3 / MinIO"]
-        end
-    end
-
-    %% Connections
-    WebApp --> LB
-    MobileApp --> LB
-    LB --> SSL
-    SSL --> API
-    API --> DB
-    API --> Cache
-    API --> MQ
-    API --> Storage
-    MQ --> Cache
-    WS --> API
-    WS --> WebApp
-    WS --> MobileApp
-
-    %% Node styling
-    classDef clientNode fill:#ff9e64,stroke:#ff7043,stroke-width:2px,color:#1a1b26,font-weight:600
-    classDef gatewayNode fill:#73daca,stroke:#41a6b5,stroke-width:2px,color:#1a1b26,font-weight:600
-    classDef appNode fill:#bb9af7,stroke:#9d7cd8,stroke-width:2px,color:#1a1b26,font-weight:600
-    classDef dataNode fill:#9ece6a,stroke:#73b25a,stroke-width:2px,color:#1a1b26,font-weight:600
-
-    %% Apply styles
-    class WebApp,MobileApp clientNode
-    class LB,SSL gatewayNode
-    class API,WS,MQ appNode
-    class DB,Cache,Storage dataNode
-
-    %% Subgraph styling
-    style High_Level_Architecture fill:#1a1b26,stroke:#3b4261,stroke-width:2px,color:#c0caf5
-    style Client_Layer fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
-    style API_Gateway fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
-    style Application_Layer fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
-    style Data_Layer fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
-```
-
-**Explanation:** The architecture follows a layered approach to ensure scalability and maintainability. The client layer supports web and mobile interfaces, the API gateway handles load balancing and security, the application layer processes business logic and background tasks, and the data layer manages persistence and caching.
-
----
-
-## 4. Visualizations & Sequence Diagrams
-
-The following diagrams illustrate key workflows and state transitions that are common to all stacks. These visualizations provide a clear understanding of system behavior for authentication, request execution, background tasks, and job lifecycles.
-
-### 4.1 Authentication Handshake
-
-```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  }
-}}%%
-
+%%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
 sequenceDiagram
     participant U as User
-    participant FE as Frontend
-    participant API
-    participant AS as AuthService
-    participant DB as UserDB
+    participant FE as Frontend SPA
+    participant BE as Backend API
+    participant AuthSvc as Authentication Service (in BE)
+    participant UserDB as User Database
 
-    U->>FE: Submit credentials
-    FE->>API: POST /api/v1/auth/login
-    API->>AS: Validate credentials
-    AS->>DB: Lookup user
-    DB-->>AS: User record
-    AS-->>API: JWT access & refresh tokens
-    API-->>FE: Set tokens in HttpOnly cookie
-    FE-->>U: Redirect to dashboard
-```
-
-**Context:** The authentication process uses JWT tokens for secure session management, with access and refresh tokens stored in HttpOnly cookies to prevent XSS attacks.
-
-### 4.2 Request Execution Flow
-
-```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  }
-}}%%
-
-sequenceDiagram
-    participant UI
-    participant API
-    participant Q as Queue
-    participant W as Worker
-    participant DB
-    participant External
-
-    UI->>API: POST /api/v1/test/{id}
-    API->>Q: enqueue({endpoint_id, payload})
-    Q->>W: process job
-    W->>External: perform HTTP call
-    External-->>W: return response
-    W->>DB: write request_log
-    W-->>UI: push status via WS
-```
-
-**Context:** Request execution is offloaded to background workers to ensure the API remains responsive. Real-time updates are pushed to the client via WebSocket connections.
-
-### 4.3 Background Task Retry Flow
-
-```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  },
-  'flowchart': {
-    'nodeSpacing': 30,
-    'rankSpacing': 50,
-    'curve': 'basis'
-  }
-}}%%
-
-flowchart TB
-    subgraph Background_Task_Retry_Flow["Background Task Retry Flow"]
-        A["📨 API enqueues task"]
-        B["🤖 Worker picks job"]
-        C["📡 Execute HTTP call"]
-        D["💾 Store log"]
-        E["🔁 Retry handler"]
-        F["💀 DeadLetter / Alert"]
+    U->>FE: Submits login credentials (email, password)
+    FE->>BE: POST /api/auth/login with credentials
+    BE->>AuthSvc: Validate credentials
+    AuthSvc->>UserDB: Query user by email
+    UserDB-->>AuthSvc: User record (with hashed password)
+    AuthSvc->>AuthSvc: Compare provided password with stored hash
+    alt Credentials valid
+        AuthSvc->>AuthSvc: Generate JWT Access Token
+        AuthSvc->>AuthSvc: Generate JWT Refresh Token
+        AuthSvc-->>BE: Return User Info, Access Token, Refresh Token
+    else Credentials invalid
+        AuthSvc-->>BE: Authentication Error
     end
-
-    A --> B
-    B --> C
-    C -->|Success| D
-    C -->|Failure| E
-    E -->|Retry| B
-    E -->|Max retries reached| F
-
-    %% Node styling
-    classDef primaryNode fill:#7aa2f7,stroke:#5a7ec5,stroke-width:2px,color:#1a1b26,font-weight:600
-    class A,B,C,D,E,F primaryNode
-
-    %% Subgraph styling
-    style Background_Task_Retry_Flow fill:#1a1b26,stroke:#3b4261,stroke-width:2px,color:#c0caf5
+    BE-->>FE: Response (User Info + Tokens / Error)
+    FE->>FE: Store tokens securely
+    FE-->>U: Redirect to dashboard / Show error
 ```
 
-**Context:** The retry flow ensures robustness by handling transient failures in HTTP calls through configurable retry policies. Failed tasks beyond retry limits are sent to a dead-letter queue or trigger alerts for manual intervention.
+### 5.2. API Request Execution Flow (Simplified)
 
-### 4.4 Job Lifecycle State Diagram
-
+(Reflecting synchronous or simple async processing within the backend)
 ```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#7aa2f7',
-    'primaryTextColor': '#1a1b26',
-    'primaryBorderColor': '#3b4261',
-    'lineColor': '#bb9af7',
-    'background': '#1a1b26',
-    'mainBkg': '#1a1b26',
-    'secondBkg': '#24283b',
-    'tertiaryBkg': '#292e42',
-    'fontFamily': '"Segoe UI", sans-serif',
-    'fontSize': '14px',
-    'fontWeight': '600',
-    'labelBackground': '#24283b',
-    'edgeLabelBackground': '#24283b',
-    'clusterBkg': '#24283b',
-    'clusterBorder': '#3b4261',
-    'defaultLinkColor': '#bb9af7',
-    'titleColor': '#c0caf5'
-  }
-}}%%
+%%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
+sequenceDiagram
+    participant UI as Frontend SPA
+    participant BE as Backend API
+    participant ReqExecSvc as Request Execution Service (in BE)
+    participant LogDB as Request Log Database
+    participant ExtAPI as External Target API
 
-stateDiagram-v2
-    [*] --> Enqueued
-    Enqueued --> Processing
-    Processing --> Completed
-    Processing --> Failed
-    Failed --> Retrying
-    Retrying --> Enqueued
-    Failed --> DeadLetter
-    Completed --> [*]
-    DeadLetter --> [*]
+    UI->>BE: POST /api/test/{endpoint_id} (or ad-hoc request details)
+    BE->>ReqExecSvc: Process API execution request
+    ReqExecSvc->>ReqExecSvc: Prepare HTTP call (interpolate variables, set headers)
+    ReqExecSvc->>ExtAPI: Perform HTTP call (e.g., GET, POST)
+    ExtAPI-->>ReqExecSvc: Receive HTTP response (status, headers, body)
+    ReqExecSvc->>LogDB: Save request and response details to RequestLog
+    ReqExecSvc-->>BE: Return execution result
+    BE-->>UI: Send execution result (status, headers, body, duration)
+    alt Real-time Update (Optional, via WebSocket if implemented)
+        BE-->>UI: Push status update (e.g., "Executing", "Completed")
+    end
 ```
-
-**Context:** This state diagram tracks the lifecycle of a background job from enqueuing to completion or failure, providing clarity on how tasks are managed across different states and transitions.
+*Note: The "Background Task Retry Flow" and "Job Lifecycle State Diagram" from the original document are less relevant for the initial simplified task processing and have been omitted here. Retries, if implemented for simple async tasks, would be part of the `Request Execution Service` logic.*
 
 ---
 
-## 5. Cross-Stack Design Principles
+## 6. Technology Stack Comparison
 
-To maintain consistency and ensure a cohesive user experience, the following design principles are enforced across all technology stacks:
+This table provides a high-level comparison of the core technologies used in each implemented stack, based on `docs/Stacks.md`.
 
-- **Modularity:** Codebase organization follows Domain-Driven Design (DDD) principles to separate concerns and improve maintainability.
-- **Scalability:** Background tasks and workers are implemented to handle large volumes of API requests without blocking the main application thread.
-- **Security:** Authentication, rate limiting, and input validation are mandatory to protect against common vulnerabilities such as XSS, CSRF, and SSRF.
-- **Real-Time Feedback:** WebSocket or equivalent technologies are used to provide immediate updates on task status to users.
-- **Documentation:** API endpoints are documented with OpenAPI/Swagger specifications for developer convenience and automated testing.
+| Feature                       | Python/Django + React                                   | C#/.NET + Blazor WASM                                     | Node.js/Express + Next.js                                | Java/Spring Boot + Angular                                       |
+| :---------------------------- | :------------------------------------------------------ | :-------------------------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------------- |
+| **Stack Name (Docs)**       | `django.md`                                             | `dotnet.md`                                               | `next.md`                                                | `springboot.md`                                                  |
+| **Backend Framework**         | Django 5.0, Django REST Framework 3.14                  | .NET 8 Web API (ASP.NET Core)                             | Express.js 4.18 (Node.js 20, TypeScript)                 | Spring Boot 3.2 (Spring Web, Java)                               |
+| **Frontend Framework**        | React 18 (TypeScript 5.0, Vite 4.0)                     | Blazor WebAssembly (.NET 8)                               | Next.js 14 (App Router, TypeScript)                      | Angular 17 (TypeScript 5.0)                                      |
+| **Database ORM/Access**     | Django ORM (with psycopg3)                              | Entity Framework Core 8.0 (Npgsql)                        | Prisma 5.0 ORM                                           | Spring Data JPA (Hibernate 6.2, HikariCP)                        |
+| **Authentication (Backend)**  | `django-rest-framework-simplejwt`                       | ASP.NET Core Identity + JWT Bearer                        | Passport.js (JWT Strategy)                               | Spring Security 6 (JWT)                                          |
+| **API Documentation**         | `drf-spectacular` (OpenAPI 3.0)                         | Swashbuckle (OpenAPI/Swagger)                             | Swagger JSDoc + `swagger-ui-express`                     | SpringDoc OpenAPI 3 (Swagger)                                    |
+| **Task Processing (Initial)** | Synchronous / Django Background Tasks                   | ASP.NET Core `BackgroundService`                          | Simple Async Operations / In-Memory Queue                | Spring `@Async` Methods                                          |
+| **UI Library (Frontend)**     | Tailwind CSS 3.3 + Headless UI                          | Blazor Bootstrap (or similar)                             | Tailwind CSS + `shadcn/ui` (or Radix UI)                 | Angular Material + CDK                                           |
+| **State Management (FE)**   | Zustand + React Query (TanStack Query)                  | Blazor built-in features                                  | Zustand + React Query (TanStack Query)                   | NgRx + RxJS                                                      |
+| **HTTP Client (FE)**        | Axios                                                   | `HttpClient` (Blazor configured)                          | Native `fetch` API                                       | Angular `HttpClient`                                             |
+| **Forms (FE)**                | React Hook Form + Zod                                   | Blazor `EditForm`                                         | React Hook Form + Zod                                    | Angular Reactive Forms                                           |
+| **Backend Testing**         | `pytest-django`, `factory-boy`, `pytest-cov`            | `xUnit`, `Moq`, `FluentAssertions`, `Testcontainers`    | `Jest`, `Supertest`, `@testcontainers/postgresql`        | `JUnit 5`, `Mockito`, Spring Test, `Testcontainers`              |
+| **Frontend Testing**        | `Jest`, `React Testing Library`, `MSW`                  | `bUnit`                                                   | `Jest`, `React Testing Library`, `MSW`                   | `Jasmine`, `Karma`                                               |
+| **Backend Linting/Quality** | `black`, `flake8`, `isort`, `mypy`                      | Roslyn Analyzers (StyleCop)                               | ESLint, Prettier, TypeScript (strict)                    | SpotBugs, Checkstyle, JaCoCo                                     |
+| **Build Tool (Backend)**      | Not Applicable (Python runtime)                         | `dotnet build` (MSBuild)                                  | `tsc` or `esbuild`                                       | Maven 3.9 / Gradle 8.0                                           |
+| **Build Tool (Frontend)**     | Vite 4.0                                                | `dotnet build` (part of Blazor WASM build)                | Next.js CLI (Turbopack/Webpack)                          | Angular CLI                                                      |
+| **Configuration (Backend)**   | `python-decouple` / Env Vars                            | `appsettings.json` / Env Vars                             | `dotenv` / Env Vars                                      | `application.yml` / Env Vars                                     |
 
-**Note:** While the tools and frameworks may vary, the functional outcomes (e.g., API responses, error handling, user workflows) must remain identical across all stacks to ensure a seamless experience for end users and developers.
+This table provides a snapshot of the primary tools and libraries for each stack as defined for the initial, simplified implementation phase.
 ```
 

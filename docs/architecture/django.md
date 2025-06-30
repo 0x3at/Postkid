@@ -1,20 +1,18 @@
 
-# API Playground - Stack 1: Python / Django + React 🐍
+# API Playground - Python/Django + React Stack Architecture 🐍
 
-This document provides a detailed technical reference for the implementation of the API Playground application using the Python / Django backend with a React frontend. As part of a multi-stack development plan to demonstrate architectural versatility, this stack leverages Django's robust web framework capabilities and React's dynamic UI rendering to create a scalable, maintainable, and user-friendly API testing platform. This guide covers system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches, serving as an exhaustive resource for developers.
+This document provides a detailed technical reference for the Python/Django and React implementation of the API Playground application. It aligns with the specifications outlined in `docs/YellowPaper.md` and the simplified technology choices in `docs/Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches for this specific stack.
 
 ---
 
-## 1. Overview of Stack 1
+## 1. Overview
 
-The Python / Django + React stack combines the strengths of Django—a high-level, batteries-included web framework with a mature ecosystem—and React, a powerful JavaScript library for building interactive user interfaces. This stack is chosen for its ease of development, extensive community support, and suitability for rapid prototyping and production-grade applications. Key features include Django's built-in ORM for data management, Django REST Framework (DRF) for API development, and React's component-based architecture for creating responsive single-page applications (SPAs) and mobile interfaces via React Native.
+This implementation pairs a Python backend, utilizing the Django framework (version 5.0) and Django REST Framework (DRF version 3.14), with a React frontend (version 18 with TypeScript 5.0). The focus is on leveraging Django's robust capabilities for rapid development of the backend API and React's modern features for a dynamic and responsive user interface, built with Vite 4.0.
 
-**Stack Highlights:**
-- **Backend:** Python with Django for robust server-side logic, RESTful API endpoints via DRF, and asynchronous task processing with Celery.
-- **Frontend:** React with Vite for fast development and build times, supporting both web and mobile (via React Native) interfaces.
-- **Use Case:** Ideal for developers familiar with Python ecosystems, needing a full-featured framework with out-of-the-box tools for authentication, database management, and API creation, paired with a modern frontend for rich user experiences.
-
-**Objective:** Implement the API Playground with identical functionality to other stacks, adhering to the shared API specification and data model outlined in `common_foundations.md`, while leveraging stack-specific optimizations for performance and developer productivity.
+**Stack Highlights (as per `docs/Stacks.md`):**
+- **Backend:** Django 5.0 for core logic, Django REST Framework 3.14 for RESTful APIs, `django-rest-framework-simplejwt` for authentication, and `django-ratelimit` for rate limiting. PostgreSQL 15 serves as the database. Task processing will initially be synchronous or use simple Django Background Tasks, deferring Celery.
+- **Frontend:** React 18 with TypeScript 5.0, built using Vite 4.0. Key libraries include Tailwind CSS 3.3, Headless UI, Zustand for state management, React Query (TanStack Query) for data fetching, React Router 6 for navigation, React Hook Form with Zod for forms, and Axios for HTTP requests.
+- **Objective:** To deliver a fully functional API Playground instance adhering to the project's core requirements, emphasizing the streamlined technology stack defined in `docs/Stacks.md` for efficient development and deployment. `common_foundations.md` is not a specified source of truth; primary references are `YellowPaper.md` and `Stacks.md`.
 
 ---
 
@@ -339,79 +337,150 @@ The following key workflows are implemented to handle asynchronous tasks and ser
 
 ## 8. Authentication & Security Patterns
 
-Security is paramount for the API Playground application. The following patterns and configurations are implemented in this stack to protect against common vulnerabilities:
+Security measures align with `YellowPaper.md` and are implemented using specific Django tools from `docs/Stacks.md`.
 
-- **JWT Authentication:**
-  - Uses `djangorestframework-simplejwt` for token-based auth.
-  - Access tokens expire after 15 minutes; refresh tokens last 7 days and rotate on use for enhanced security.
-  - Tokens are stored in HttpOnly cookies to prevent XSS attacks.
-- **Rate Limiting:**
-  - Implemented via Redis-backed custom middleware to limit requests per IP or user (e.g., 100 requests per minute).
-  - Prevents abuse and ensures fair usage of resources.
-- **CSRF Protection:**
-  - Exempted for stateless API endpoints but enforced for any form submissions or state-changing web views.
-  - Aligns with Django's built-in security mechanisms.
+- **JWT Authentication (`django-rest-framework-simplejwt`):**
+  - Handles token-based authentication (access and refresh tokens).
+  - Access tokens are short-lived (e.g., 15 minutes).
+  - Refresh tokens are longer-lived (e.g., 7 days) and can be used to obtain new access tokens. Token rotation and blacklisting features of `simplejwt` will be utilized as per standard secure practices.
+  - Tokens should be stored securely by the client (e.g., HttpOnly cookies for web clients if server-side rendering or BFF pattern is used, otherwise secure browser storage for SPAs).
+- **CORS (`django-cors-headers`):**
+  - Configured to allow requests from the React frontend's origin. In production, this will be restricted to the specific frontend domain.
+- **Rate Limiting (`django-ratelimit`):**
+  - Applied to sensitive endpoints (e.g., login, registration, API execution) to prevent abuse.
+  - Can be configured to use database, cache (Redis if available and configured), or in-memory stores. For distributed setups, Redis is preferred.
+- **CSRF Protection (Django Built-in):**
+  - Django's default CSRF protection will be active for any traditional Django views/forms. For DRF APIs using token authentication, CSRF is typically not required for session-less requests but will be evaluated based on specific endpoint needs (e.g., if session auth is ever enabled for certain parts).
 - **SSRF Prevention:**
-  - Custom middleware or validation logic blocks requests to private IP ranges (e.g., 10.0.0.0/8, 192.168.0.0/16) during API testing.
-  - Protects against server-side request forgery attacks.
+  - Implemented by validating and sanitizing any user-supplied URLs that the server will make requests to (e.g., the target URL in the API execution feature). This involves disallowing requests to internal/private IP ranges and ensuring URL schemes are appropriate (HTTP/HTTPS).
+- **Input Validation (DRF Serializers / Zod for Frontend):**
+  - All incoming data is validated using DRF serializers on the backend.
+  - Frontend forms use Zod with `react-hook-form` for client-side validation before submission.
+- **HTTPS:**
+  - Enforced in production through Nginx configuration (SSL termination).
+- **Secret Management:**
+  - Sensitive configurations (secret key, database credentials, API keys) managed via environment variables (e.g., using `python-decouple` locally and environment variables in production).
 - **Audit Logging:**
-  - Logs all authentication events (login, logout, token refresh) and execution events (API test calls) with timestamps, user IDs, and IP addresses.
-  - Stored in the database for security audits and debugging.
-
-**Note:** Regularly review Django security advisories and apply updates to mitigate emerging threats. Use environment variables for sensitive configurations like secret keys and database credentials.
+  - Key security-relevant events (logins, significant data changes, executed API requests) are logged to the `RequestLog` model or a dedicated audit log model, including user ID, IP address, timestamp, and action performed.
 
 ---
 
-## 9. API Design Conventions
+## 9. API Design Conventions & Documentation
 
-The API follows consistent design conventions to ensure predictability and ease of use for developers and client applications:
-
-- **Response Envelope:**
-  - All responses are wrapped in a standard format: `{ status, data, message, timestamp }`.
-  - Example: `{"status": "success", "data": {...}, "message": "Operation completed", "timestamp": "2023-10-01T12:00:00Z"}`.
-- **Versioning:**
-  - Endpoints are versioned under `/api/v1/` to support future updates without breaking existing clients.
-- **Pagination:**
-  - Uses Django's `PageNumberPagination` with a default page size of 20 items.
-  - Provides links to next/previous pages in response metadata for easy navigation.
-
-**Best Practice:** Document API endpoints using Django REST Framework's built-in tools or integrate with Swagger/OpenAPI for interactive documentation. Ensure error messages are descriptive to aid debugging.
+- **API Specification:** Endpoints adhere to `docs/Endpoints.md`.
+- **Documentation Generation (`drf-spectacular`):**
+  - Used to generate an OpenAPI 3.0 schema and Swagger UI for the API. This provides interactive documentation.
+- **Versioning:** API will be versioned (e.g., `/api/v1/`).
+- **Response Format:** Consistent JSON response structure (e.g., `{ "data": ..., "message": ..., "status_code": ... }` or standard DRF responses).
+- **Error Handling:** DRF's standard exception handling will be used, providing clear error messages and appropriate HTTP status codes.
+- **Pagination:** DRF's pagination classes for paginated list responses.
 
 ---
 
-## 10. Frontend Architecture
+## 10. Frontend Architecture (React + Vite)
 
-The React frontend is structured for modularity and scalability, following modern React best practices. Key directories include:
+The React frontend architecture is detailed in section 5 ("Domain-Driven Design (DDD) Folder Structure"). Key aspects include:
 
-- **`components/`:** Reusable UI elements like buttons, modals, and API request forms.
-- **`hooks/`:** Custom hooks for data fetching (with React Query), form management, or authentication state.
-- **`services/`:** Encapsulates API calls and business logic, abstracting backend interactions.
-- **`stores/`:** Zustand-based state management for global app state (e.g., user auth status, active collection).
-- **`pages/`:** Route-specific components rendered via React Router, built and bundled with Vite for optimal performance.
-- **`utils/`:** Utility functions for formatting, validation, or common operations shared across the app.
-
-**Key Features:**
-- **Routing:** Implemented with `react-router-dom` for seamless navigation in the SPA.
-- **State Management:** Zustand provides a minimal, centralized store for managing authentication tokens, user preferences, and app-wide data.
-- **Data Fetching:** React Query handles server-side data with caching and automatic refetching to minimize redundant requests.
-- **Form Handling:** `react-hook-form` paired with Zod ensures performant and validated form inputs for API endpoint configurations.
-
-**Best Practice:** Use React's functional components and hooks to maintain a clean, maintainable codebase. Leverage Vite's fast development server and hot module replacement (HMR) for efficient iteration during development.
+- **Build Tool:** Vite 4.0 with TypeScript 5.0.
+- **UI:** Tailwind CSS 3.3 and Headless UI for accessible, unstyled components.
+- **State Management:** Zustand for global state, TanStack Query (React Query) for server state management (caching, refetching, optimistic updates).
+- **Routing:** React Router 6 for client-side navigation.
+- **Forms:** React Hook Form with Zod for schema-based validation.
+- **HTTP Client:** Axios, with interceptors configured for handling JWT tokens (attaching to requests, handling refresh flows) and global error handling.
+- **Component Structure:** Organized by features and shared common components.
+- **Testing:** Jest, React Testing Library, and MSW (Mock Service Worker) for unit, integration, and mocked API testing.
 
 ---
 
 ## 11. Deployment Topology
 
-The deployment strategy for the Django + React stack is designed to support both development and production environments, ensuring scalability, reliability, and ease of setup. Below are the configurations for each environment:
+Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`.
 
-- **Development Environment:**
-  - **Tools:** Docker Compose orchestrates local containers for Django, React, Redis, and PostgreSQL.
-  - **Setup:** A single `docker-compose.yml` file defines services, volumes, and networks for quick setup and testing.
-  - **Purpose:** Facilitates rapid development with hot reloading (via Vite for React) and easy database migrations (via Django commands).
-  - **Configuration:** Environment variables are managed via `.env` files for simplicity and security.
+**Development Environment (Docker Compose):**
+- **Orchestration:** `docker-compose.yml` defines services for:
+    - Django/Gunicorn application server.
+    - React development server (Vite with HMR).
+    - PostgreSQL database.
+    - Redis (optional, if `django-ratelimit` is configured to use it).
+- **Workflow:** Facilitates easy local setup, consistent environments, and rapid iteration.
+- **Configuration:** Environment variables via `.env` files (e.g., using `python-decouple` for Django).
 
-- **Production Environment:**
-  - **Infrastructure:** Hosted on AWS using Elastic Kubernetes Service (EKS) or Elastic Container Service (ECS) for container orchestration.
-  - **Web Server:** Gunicorn serves Django behind an Application Load Balancer (ALB) for traffic distribution and SSL termination.
-  - **Frontend Deployment:** React builds are hosted on a CDN (e.g., CloudFront) for low-latency static asset delivery.
-  - **Database & Cache:** AWS RDS for PostgreSQL ensures managed
+**Production Environment (Conceptual - Container-Based):**
+- **Containerization:** Both Django (with Gunicorn) and React (static build served by Nginx or a CDN) applications are packaged into Docker containers.
+- **Web Server/Gateway:** Nginx serves as the reverse proxy, load balancer (if multiple app instances), and handles SSL termination. It will serve the static React frontend files and proxy API requests to the Gunicorn/Django backend.
+- **Application Server:** Gunicorn runs the Django application.
+- **Database:** PostgreSQL (shared, managed service like AWS RDS recommended).
+- **Cache:** Redis (shared, managed service like AWS ElastiCache recommended if used for rate limiting or caching).
+- **CI/CD:** GitHub Actions for automated building, testing, and deployment of containers.
+- **Static Assets (Frontend):** The built React application (static HTML, CSS, JS) can be served by Nginx or, for better performance and scalability, hosted on a CDN (e.g., AWS CloudFront).
+- **Configuration:** Environment variables injected into containers by the orchestration platform.
+
+**Diagram: High-Level Production Deployment**
+```mermaid
+graph TD
+    User[End User] --> Internet[Internet]
+    Internet --> LB[Load Balancer / CDN (e.g., AWS ALB/CloudFront)]
+
+    subgraph "Cloud Environment (e.g., AWS)"
+        LB --> NginxGateway[Nginx Reverse Proxy / Static Content Server]
+
+        subgraph "Application Servers (Containers)"
+            NginxGateway --> AppServer1[Django + Gunicorn Container 1]
+            NginxGateway --> AppServer2[Django + Gunicorn Container 2]
+            NginxGateway --> AppServerN[Django + Gunicorn Container N]
+        end
+
+        AppServer1 --> DB[Managed PostgreSQL Database]
+        AppServer2 --> DB
+        AppServerN --> DB
+
+        AppServer1 -.-> Cache[(Optional) Managed Redis Cache]
+        AppServer2 -.-> Cache
+        AppServerN -.-> Cache
+
+        NginxGateway -- Serves Static Files --> LB
+    end
+
+    style User fill:#c9d1d9,stroke:#768390
+    style Internet fill:#79c0ff,stroke:#58a6ff
+    style LB fill:#7ee787,stroke:#56d364
+    style NginxGateway fill:#ffab70,stroke:#e69963
+    style AppServer1 fill:#d2a8ff,stroke:#b083f0
+    style AppServer2 fill:#d2a8ff,stroke:#b083f0
+    style AppServerN fill:#d2a8ff,stroke:#b083f0
+    style DB fill:#f0b0a4,stroke:#e39387
+    style Cache fill:#a5d6ff,stroke:#89bde8
+```
+This diagram illustrates Nginx serving static React files (potentially via CDN) and proxying API calls to multiple Django/Gunicorn application container instances, which connect to shared PostgreSQL and Redis services.
+
+---
+
+## 12. Testing Strategy
+
+Testing adheres to `YellowPaper.md` guidelines and uses stack-specific tools from `docs/Stacks.md`.
+
+**Backend (Python/Django):**
+- **Unit Tests (`pytest-django`):**
+    - Test individual functions, methods, and classes (models, services, utilities).
+    - Use `factory-boy` for generating test data/model instances.
+    - Mock external dependencies (e.g., external API calls made by the request execution service).
+- **Integration Tests (`pytest-django`):**
+    - Test interactions between components, particularly API endpoints.
+    - Use DRF's `APIClient` or `pytest-django`'s client to make requests to endpoints and assert responses, status codes, and database state changes.
+    - Test authentication, permissions, serializers, and view logic together.
+- **Coverage (`pytest-cov`):** Aim for 80%+ test coverage.
+
+**Frontend (React/TypeScript):**
+- **Unit Tests (`Jest` + `React Testing Library`):**
+    - Test individual React components, custom hooks, and utility functions in isolation.
+- **Integration Tests (`Jest` + `React Testing Library`):**
+    - Test interactions between multiple components, context providers, and routing.
+    - Simulate user events and verify UI changes and application behavior.
+- **API Mocking (`msw` - Mock Service Worker):**
+    - Intercept HTTP requests made by the frontend during tests and return mock responses. This allows testing of data fetching logic, state updates, and UI rendering based on API responses without actual backend calls.
+- **End-to-End Tests (Future Consideration, e.g., Playwright/Cypress):**
+    - As specified in `YellowPaper.md`, full E2E tests covering user journeys. For the simplified stack, focus is on unit/integration for frontend and backend first.
+
+**CI/CD (`GitHub Actions`):**
+- All tests (backend and frontend) will be run automatically on every push and pull request to ensure code quality and prevent regressions.
+- Linting (`black`, `flake8`, `isort`, `mypy` for backend; `eslint`, `prettier` for frontend) and static analysis will also be part of the CI pipeline.
