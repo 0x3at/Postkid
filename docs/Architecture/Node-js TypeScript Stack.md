@@ -263,7 +263,7 @@ api-playground-node/
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `../../Specs/Yellow Paper.md` and implemented in the Express.js backend using Prisma ORM, targeting PostgreSQL.
+The core data model is defined by `../../Specs/Yellow Paper.md` and [`../../Models/Data Models.md`](../../Models/Data%20Models.md), and implemented in the Express.js backend using Prisma ORM, targeting PostgreSQL. The API interactions are further detailed in `../../API-Reference/`.
 
 ```mermaid
 %%{init: {

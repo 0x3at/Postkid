@@ -1,6 +1,8 @@
 # API Playground - Architecture Overview
 
-This document serves as the central point for understanding the architecture of the API Playground application across its various technology stack implementations. It provides links to detailed architecture documents for each stack, outlines shared principles, and offers a comparative overview.
+This document serves as the central point for understanding the architecture of the API Playground application across its various technology stack implementations.
+
+It provides links to detailed architecture documents for each stack, outlines shared principles, and offers a comparative overview.
 
 The primary sources of truth for requirements and technology choices are:
 -   `docs/Specs/Yellow Paper.md`: Defines the overall project, its features, and acceptance criteria.
@@ -30,28 +32,29 @@ Detailed architecture for each implemented stack can be found in their respectiv
 -   **C#/.NET + Blazor WASM:** [`./NET Stack.md`](./NET%20Stack.md)
 -   **Node.js/TypeScript (Express.js + Next.js):** [`./Node-js TypeScript Stack.md`](./Node-js%20TypeScript%20Stack.md)
 -   **Java/Spring Boot + Angular:** [`./Java Spring Boot Stack.md`](./Java%20Spring%20Boot%20Stack.md)
+-   **Go/Fiber + SvelteKit:** [`./Go Fiber Stack.md`](./Go%20Fiber%20Stack.md) (Documentation to be created)
 
-*Note: The Go stack mentioned in previous versions of this document is not part of the currently defined implementations in `docs/Tech-Stacks/Technology Stacks.md`.*
+*Note: The Go stack is defined in `docs/Tech-Stacks/Technology Stacks.md`; its detailed architecture document is pending.*
 
 ---
 
 ## 2. Shared Design Principles
 
-These principles, derived primarily from `docs/Specs/Yellow Paper.md`, guide the development of all stack implementations to ensure consistency and quality:
+The following principles, derived primarily from `docs/Specs/Yellow Paper.md`, guide the development of all stack implementations to ensure consistency and quality:
 
--   **Consistency:** All stacks must implement the features and API endpoints (as will be detailed in `docs/API-Reference/`) as defined in `docs/Specs/Yellow Paper.md` to ensure identical functionality and user experience.
+-   **Consistency:** All stacks must implement the features and API endpoints (as will be detailed in [`docs/API-Reference/`](../API-Reference/)) as defined in [`docs/Specs/Yellow Paper.md`](../Specs/Yellow%20Paper.md) to ensure identical functionality and user experience.
 -   **Modularity:** Codebases should be organized logically (e.g., following Domain-Driven Design principles where appropriate, or standard conventions for the framework) to promote maintainability and separation of concerns.
 -   **Security:**
     -   Robust authentication (JWT-based) and authorization mechanisms are mandatory.
     -   Rate limiting must be implemented to prevent abuse.
     -   Input validation is critical on all incoming data.
     -   Protection against common web vulnerabilities (XSS, CSRF, SSRF) must be considered and implemented.
--   **Simplified Task Processing (Initial Scope):** As per `docs/Tech-Stacks/Technology Stacks.md`, complex background task queues (Celery, RabbitMQ, Bull, Hangfire) are deferred. Initial implementations will use simpler, in-process asynchronous mechanisms native to each stack (e.g., Spring `@Async`, ASP.NET `BackgroundService`, Django `BackgroundTasks`, simple Node.js async patterns).
--   **Performance:** While full optimization is iterative, applications should be responsive. API response times and frontend load times are key considerations (see `docs/Specs/Yellow Paper.md` for targets).
--   **Testability:** Each stack must include a comprehensive testing strategy, covering unit, integration, and (conceptually) end-to-end tests.
--   **Containerization:** All implementations are designed to be deployed via Docker containers, as outlined in `docs/Specs/Yellow Paper.md`.
--   **API Documentation:** Each backend API must be documented using OpenAPI 3.0 standards (e.g., Swashbuckle, drf-spectacular, SpringDoc, Swagger JSDoc).
--   **Database:** PostgreSQL 15 is the shared relational database.
+-   **Simplified Task Processing (Initial Scope):** As per [`docs/Tech-Stacks/Technology Stacks.md`](../Tech-Stacks/Technology%20Stacks.md), complex background task queues (Celery, RabbitMQ, Bull, Hangfire) are deferred. Initial implementations will use simpler, in-process asynchronous mechanisms native to each stack (e.g., Spring `@Async`, ASP.NET `BackgroundService`, Django `BackgroundTasks`, simple Node.js async patterns).
+-   **Performance:** While full optimization is iterative, applications should be responsive. API response times and frontend load times are key considerations (see [`docs/Specs/Yellow Paper.md#📈-performance-requirements`](../Specs/Yellow%20Paper.md#📈-performance-requirements) for targets).
+-   **Testability:** Each stack must include a comprehensive testing strategy, covering unit, integration, and (conceptually) end-to-end tests, as outlined in the [Testing Strategy of the Yellow Paper](../Specs/Yellow%20Paper.md#🧪-testing-strategy).
+-   **Containerization:** All implementations are designed to be deployed via Docker containers, as outlined in the [Deployment Architecture of the Yellow Paper](../Specs/Yellow%20Paper.md#🚀-deployment-architecture).
+-   **API Documentation:** Each backend API must be documented using OpenAPI 3.0 standards (e.g., Swashbuckle, drf-spectacular, SpringDoc, Swagger JSDoc), further detailed in [`docs/API-Reference/`](../API-Reference/).
+-   **Database:** PostgreSQL 15 is the shared relational database, with the schema detailed in [`docs/Models/Data Models.md`](../Models/Data%20Models.md).
 -   **Configuration:** Sensitive configurations should be managed via environment variables.
 
 ---
@@ -97,9 +100,9 @@ graph TD
     style H fill:#bb9af7,stroke:#9d7cd8
 ```
 **Key Components:**
--   **Frontend SPA:** Single Page Application specific to each stack (React, Blazor WASM, Next.js, Angular).
+-   **Frontend SPA:** Single Page Application specific to each stack (React, Blazor WASM, Next.js, Angular, SvelteKit).
 -   **API Gateway/Reverse Proxy:** (e.g., Nginx) Manages incoming requests, SSL termination, load balancing (if applicable), and routing to the appropriate backend service. Serves static frontend assets.
--   **Backend API Service:** The core application logic, implemented in one of the four defined technology stacks. Handles business logic, authentication, and interaction with the data layer.
+-   **Backend API Service:** The core application logic, implemented in one of the five defined technology stacks. Handles business logic, authentication, and interaction with the data layer.
 -   **Shared PostgreSQL Database:** The primary data store for all stacks.
 -   **Shared Redis Cache (Optional):** Used for rate limiting (if distributed) or general caching.
 -   **External API Call:** Represents the execution of user-defined API requests to third-party services.
@@ -164,7 +167,7 @@ classDiagram
       +Int duration_ms
     }
 ```
-*Detailed ER diagrams and model definitions are available in each stack-specific architecture document and in `docs/Models/Data Models.md`.*
+*Detailed ER diagrams and model definitions are available in each stack-specific architecture document and in [`docs/Models/Data Models.md`](../Models/Data%20Models.md).*
 
 ---
 
@@ -174,7 +177,7 @@ These diagrams illustrate key workflows common to all stacks, adapted for the si
 
 ### 5.1. Authentication Handshake
 
-(As per `docs/Specs/Yellow Paper.md` JWT Strategy)
+(As per the [JWT Token Strategy in `docs/Specs/Yellow Paper.md`](../Specs/Yellow%20Paper.md#jwt-token-strategy))
 ```mermaid
 %%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
 sequenceDiagram
@@ -234,24 +237,24 @@ sequenceDiagram
 
 This table provides a high-level comparison of the core technologies used in each implemented stack, based on `docs/Tech-Stacks/Technology Stacks.md`.
 
-| Feature                       | Python/Django + React                                   | C#/.NET + Blazor WASM                                     | Node.js/Express + Next.js                                | Java/Spring Boot + Angular                                       |
-| :---------------------------- | :------------------------------------------------------ | :-------------------------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------------- |
-| **Stack Name (Docs)**       | `Python Django Stack.md`                                | `NET Stack.md`                                            | `Node-js TypeScript Stack.md`                            | `Java Spring Boot Stack.md`                                      |
-| **Backend Framework**         | Django 5.0, Django REST Framework 3.14                  | .NET 8 Web API (ASP.NET Core)                             | Express.js 4.18 (Node.js 20, TypeScript)                 | Spring Boot 3.2 (Spring Web, Java)                               |
-| **Frontend Framework**        | React 18 (TypeScript 5.0, Vite 4.0)                     | Blazor WebAssembly (.NET 8)                               | Next.js 14 (App Router, TypeScript)                      | Angular 17 (TypeScript 5.0)                                      |
-| **Database ORM/Access**     | Django ORM (with psycopg3)                              | Entity Framework Core 8.0 (Npgsql)                        | Prisma 5.0 ORM                                           | Spring Data JPA (Hibernate 6.2, HikariCP)                        |
-| **Authentication (Backend)**  | `django-rest-framework-simplejwt`                       | ASP.NET Core Identity + JWT Bearer                        | Passport.js (JWT Strategy)                               | Spring Security 6 (JWT)                                          |
-| **API Documentation**         | `drf-spectacular` (OpenAPI 3.0)                         | Swashbuckle (OpenAPI/Swagger)                             | Swagger JSDoc + `swagger-ui-express`                     | SpringDoc OpenAPI 3 (Swagger)                                    |
-| **Task Processing (Initial)** | Synchronous / Django Background Tasks                   | ASP.NET Core `BackgroundService`                          | Simple Async Operations / In-Memory Queue                | Spring `@Async` Methods                                          |
-| **UI Library (Frontend)**     | Tailwind CSS 3.3 + Headless UI                          | Blazor Bootstrap (or similar)                             | Tailwind CSS + `shadcn/ui` (or Radix UI)                 | Angular Material + CDK                                           |
-| **State Management (FE)**   | Zustand + React Query (TanStack Query)                  | Blazor built-in features                                  | Zustand + React Query (TanStack Query)                   | NgRx + RxJS                                                      |
-| **HTTP Client (FE)**        | Axios                                                   | `HttpClient` (Blazor configured)                          | Native `fetch` API                                       | Angular `HttpClient`                                             |
-| **Forms (FE)**                | React Hook Form + Zod                                   | Blazor `EditForm`                                         | React Hook Form + Zod                                    | Angular Reactive Forms                                           |
-| **Backend Testing**         | `pytest-django`, `factory-boy`, `pytest-cov`            | `xUnit`, `Moq`, `FluentAssertions`, `Testcontainers`    | `Jest`, `Supertest`, `@testcontainers/postgresql`        | `JUnit 5`, `Mockito`, Spring Test, `Testcontainers`              |
-| **Frontend Testing**        | `Jest`, `React Testing Library`, `MSW`                  | `bUnit`                                                   | `Jest`, `React Testing Library`, `MSW`                   | `Jasmine`, `Karma`                                               |
-| **Backend Linting/Quality** | `black`, `flake8`, `isort`, `mypy`                      | Roslyn Analyzers (StyleCop)                               | ESLint, Prettier, TypeScript (strict)                    | SpotBugs, Checkstyle, JaCoCo                                     |
-| **Build Tool (Backend)**      | Not Applicable (Python runtime)                         | `dotnet build` (MSBuild)                                  | `tsc` or `esbuild`                                       | Maven 3.9 / Gradle 8.0                                           |
-| **Build Tool (Frontend)**     | Vite 4.0                                                | `dotnet build` (part of Blazor WASM build)                | Next.js CLI (Turbopack/Webpack)                          | Angular CLI                                                      |
-| **Configuration (Backend)**   | `python-decouple` / Env Vars                            | `appsettings.json` / Env Vars                             | `dotenv` / Env Vars                                      | `application.yml` / Env Vars                                     |
+| Feature                       | Python/Django + React                                   | C#/.NET + Blazor WASM                                     | Node.js/Express + Next.js                                | Java/Spring Boot + Angular                                       | Go/Fiber + SvelteKit                                         |
+| :---------------------------- | :------------------------------------------------------ | :-------------------------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------------- | :----------------------------------------------------------- |
+| **Stack Name (Docs)**       | `Python Django Stack.md`                                | `NET Stack.md`                                            | `Node-js TypeScript Stack.md`                            | `Java Spring Boot Stack.md`                                      | `Go Fiber Stack.md` (pending)                                |
+| **Backend Framework**         | Django 5.0, Django REST Framework 3.14                  | .NET 8 Web API (ASP.NET Core)                             | Express.js 4.18 (Node.js 20, TypeScript)                 | Spring Boot 3.2 (Spring Web, Java)                               | Go 1.21, Fiber v2.50                                         |
+| **Frontend Framework**        | React 18 (TypeScript 5.0, Vite 4.0)                     | Blazor WebAssembly (.NET 8)                               | Next.js 14 (App Router, TypeScript)                      | Angular 17 (TypeScript 5.0)                                      | SvelteKit (TypeScript, Vite)                                 |
+| **Database ORM/Access**     | Django ORM (with psycopg3)                              | Entity Framework Core 8.0 (Npgsql)                        | Prisma 5.0 ORM                                           | Spring Data JPA (Hibernate 6.2, HikariCP)                        | sqlc (pgx driver)                                            |
+| **Authentication (Backend)**  | `django-rest-framework-simplejwt`                       | ASP.NET Core Identity + JWT Bearer                        | Passport.js (JWT Strategy)                               | Spring Security 6 (JWT)                                          | `golang-jwt` + custom middleware                             |
+| **API Documentation**         | `drf-spectacular` (OpenAPI 3.0)                         | Swashbuckle (OpenAPI/Swagger)                             | Swagger JSDoc + `swagger-ui-express`                     | SpringDoc OpenAPI 3 (Swagger)                                    | `go-swagger` / `swag`                                        |
+| **Task Processing (Initial)** | Synchronous / Django Background Tasks                   | ASP.NET Core `BackgroundService`                          | Simple Async Operations / In-Memory Queue                | Spring `@Async` Methods                                          | Go routines / channels                                       |
+| **UI Library (Frontend)**     | Tailwind CSS 3.3 + Headless UI                          | Blazor Bootstrap (or similar)                             | Tailwind CSS + `shadcn/ui` (or Radix UI)                 | Angular Material + CDK                                           | Tailwind CSS + Skeleton UI                                   |
+| **State Management (FE)**   | Zustand + React Query (TanStack Query)                  | Blazor built-in features                                  | Zustand + React Query (TanStack Query)                   | NgRx + RxJS                                                      | Svelte stores                                                |
+| **HTTP Client (FE)**        | Axios                                                   | `HttpClient` (Blazor configured)                          | Native `fetch` API                                       | Angular `HttpClient`                                             | Native `fetch` API                                           |
+| **Forms (FE)**                | React Hook Form + Zod                                   | Blazor `EditForm`                                         | React Hook Form + Zod                                    | Angular Reactive Forms                                           | Svelte forms (e.g., `svelte-forms-lib`)                      |
+| **Backend Testing**         | `pytest-django`, `factory-boy`, `pytest-cov`            | `xUnit`, `Moq`, `FluentAssertions`, `Testcontainers`    | `Jest`, `Supertest`, `@testcontainers/postgresql`        | `JUnit 5`, `Mockito`, Spring Test, `Testcontainers`              | `Testify`, `GoMock`, `httptest`                              |
+| **Frontend Testing**        | `Jest`, `React Testing Library`, `MSW`                  | `bUnit`                                                   | `Jest`, `React Testing Library`, `MSW`                   | `Jasmine`, `Karma`                                               | `Vitest`, `Playwright`                                       |
+| **Backend Linting/Quality** | `black`, `flake8`, `isort`, `mypy`                      | Roslyn Analyzers (StyleCop)                               | ESLint, Prettier, TypeScript (strict)                    | SpotBugs, Checkstyle, JaCoCo                                     | `golangci-lint`                                              |
+| **Build Tool (Backend)**      | Not Applicable (Python runtime)                         | `dotnet build` (MSBuild)                                  | `tsc` or `esbuild`                                       | Maven 3.9 / Gradle 8.0                                           | Go modules / `Makefile`                                      |
+| **Build Tool (Frontend)**     | Vite 4.0                                                | `dotnet build` (part of Blazor WASM build)                | Next.js CLI (Turbopack/Webpack)                          | Angular CLI                                                      | Vite (via SvelteKit)                                         |
+| **Configuration (Backend)**   | `python-decouple` / Env Vars                            | `appsettings.json` / Env Vars                             | `dotenv` / Env Vars                                      | `application.yml` / Env Vars                                     | Viper / Env Vars                                             |
 
 This table provides a snapshot of the primary tools and libraries for each stack as defined for the initial, simplified implementation phase.

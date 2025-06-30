@@ -272,7 +272,7 @@ api-playground-angular/
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `../../Specs/Yellow Paper.md` and implemented using Spring Data JPA entities, mapped to PostgreSQL tables. Flyway can be used for schema migrations.
+The core data model is defined by `../../Specs/Yellow Paper.md` and [`../../Models/Data Models.md`](../../Models/Data%20Models.md), and implemented using Spring Data JPA entities, mapped to PostgreSQL tables. Flyway can be used for schema migrations. The API interactions are further detailed in `../../API-Reference/`.
 
 ```mermaid
 %%{init: {

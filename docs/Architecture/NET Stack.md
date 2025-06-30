@@ -244,7 +244,7 @@ ApiPlayground.sln
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `../../Specs/Yellow Paper.md` and implemented using Entity Framework Core with code-first migrations, targeting PostgreSQL.
+The core data model is defined by `../../Specs/Yellow Paper.md` and [`../../Models/Data Models.md`](../../Models/Data%20Models.md), and implemented using Entity Framework Core with code-first migrations, targeting PostgreSQL. The API interactions are further detailed in `../../API-Reference/`.
 
 ```mermaid
 %%{init: {

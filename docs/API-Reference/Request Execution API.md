@@ -1,6 +1,6 @@
-### Request Execution
+## Request Execution API
 
-#### POST /api/test/{endpoint_id}/
+### POST /api/test/{endpoint_id}/
 ```json
 Request:
 {
@@ -29,3 +29,12 @@ Response (200):
   "timestamp": "2025-06-01T10:00:00Z"
 }
 ```
+
+---
+### Ad-hoc Request Execution (Conceptual)
+
+While not explicitly defined as a separate endpoint, ad-hoc request execution (where the user defines the request details directly without saving to an endpoint first) can be supported by:
+1.  The UI implicitly creating a temporary or unsaved endpoint definition.
+2.  The UI then calling `POST /api/test/{endpoint_id}/` with the ID of this temporary/unsaved endpoint.
+
+Alternatively, a future enhancement could be a dedicated endpoint like `POST /api/test/adhoc` that accepts the full request definition (method, URL, headers, body, variables, timeout) in its body. For the initial MVP, executing saved or temporarily created endpoints is considered sufficient.

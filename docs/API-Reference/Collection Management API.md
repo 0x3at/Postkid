@@ -1,8 +1,8 @@
-### Collection Management
+## Collection Management API
 
 All endpoints under `/api/collections/` require authentication.
 
-#### GET /api/collections/
+### GET /api/collections/
 Query Parameters:
 - `page`: integer (default: 1)
 - `limit`: integer (default: 20, max: 100)
@@ -33,7 +33,7 @@ Response (200 OK):
 ```
 Description: Retrieves a paginated list of collections accessible to the authenticated user.
 
-#### POST /api/collections/
+### POST /api/collections/
 Request Body:
 ```json
 {
@@ -59,7 +59,7 @@ Response (201 Created):
 ```
 Description: Creates a new collection for the authenticated user.
 
-#### GET /api/collections/{collection_id}
+### GET /api/collections/{collection_id}
 Path Parameter:
 - `collection_id`: UUID of the collection.
 Response (200 OK):
@@ -79,7 +79,7 @@ Response (200 OK):
 Response (404 Not Found): If the collection does not exist or the user does not have access.
 Description: Retrieves a specific collection by its ID.
 
-#### PUT /api/collections/{collection_id}
+### PUT /api/collections/{collection_id}
 Path Parameter:
 - `collection_id`: UUID of the collection.
 Request Body:
@@ -108,7 +108,7 @@ Response (200 OK):
 Response (404 Not Found): If the collection does not exist or the user does not have access.
 Description: Updates an existing collection. Only fields provided in the request body will be updated.
 
-#### DELETE /api/collections/{collection_id}
+### DELETE /api/collections/{collection_id}
 Path Parameter:
 - `collection_id`: UUID of the collection.
 Response (204 No Content):

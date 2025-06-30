@@ -1,8 +1,8 @@
-### Endpoint Management (within Collections)
+## Endpoint Management API (within Collections)
 
 All endpoints under `/api/collections/{collection_id}/endpoints/` require authentication and that the user owns the collection.
 
-#### GET /api/collections/{collection_id}/endpoints/
+### GET /api/collections/{collection_id}/endpoints/
 Path Parameter:
 - `collection_id`: UUID of the parent collection.
 Query Parameters:
@@ -33,7 +33,7 @@ Response (200 OK):
 Response (404 Not Found): If the collection does not exist.
 Description: Retrieves a paginated list of endpoints within a specific collection.
 
-#### POST /api/collections/{collection_id}/endpoints/
+### POST /api/collections/{collection_id}/endpoints/
 Path Parameter:
 - `collection_id`: UUID of the parent collection.
 Request Body:
@@ -76,7 +76,7 @@ Response (201 Created):
 Response (404 Not Found): If the collection does not exist.
 Description: Creates a new endpoint within a collection.
 
-#### GET /api/collections/{collection_id}/endpoints/{endpoint_id}
+### GET /api/collections/{collection_id}/endpoints/{endpoint_id}
 Path Parameters:
 - `collection_id`: UUID of the parent collection.
 - `endpoint_id`: UUID of the endpoint.
@@ -111,7 +111,7 @@ Response (200 OK):
 Response (404 Not Found): If the collection or endpoint does not exist.
 Description: Retrieves a specific endpoint by its ID within a collection.
 
-#### PUT /api/collections/{collection_id}/endpoints/{endpoint_id}
+### PUT /api/collections/{collection_id}/endpoints/{endpoint_id}
 Path Parameters:
 - `collection_id`: UUID of the parent collection.
 - `endpoint_id`: UUID of the endpoint.
@@ -139,7 +139,7 @@ Response (200 OK):
 Response (404 Not Found): If the collection or endpoint does not exist.
 Description: Updates an existing endpoint within a collection.
 
-#### DELETE /api/collections/{collection_id}/endpoints/{endpoint_id}
+### DELETE /api/collections/{collection_id}/endpoints/{endpoint_id}
 Path Parameters:
 - `collection_id`: UUID of the parent collection.
 - `endpoint_id`: UUID of the endpoint.

@@ -45,7 +45,7 @@ erDiagram
         INTEGER timeout_seconds "Default: 10, CHECK constraint (1-30)"
         JSONB auth_config "Default: '{}'"
         TEXT pre_request_script "Optional"
-        TEXT test_script "Optional"
+        TEXT post_request_script "Optional"
         TIMESTAMP created_at "Default: CURRENT_TIMESTAMP"
         TIMESTAMP updated_at "Default: CURRENT_TIMESTAMP"
     }
@@ -149,7 +149,7 @@ Table: endpoints
 | timeout\_seconds     | INTEGER      | Default: `10`, CHECK: `BETWEEN 1 AND 30`                          | Request execution timeout                                 |
 | auth\_config         | JSONB        | Default: `'{}'`                                                   | Configuration for request-specific authentication (e.g., Bearer token, Basic Auth) |
 | pre\_request\_script | TEXT         | Optional                                                          | Script to run before request execution (future use)       |
-| test\_script         | TEXT         | Optional                                                          | Script to run after request execution for assertions (future use) |
+| post\_request\_script | TEXT         | Optional                                                          | Script to run after request execution for assertions (future use) |
 | created\_at          | TIMESTAMP    | Default: `CURRENT_TIMESTAMP`                                      |                                                           |
 | updated\_at          | TIMESTAMP    | Default: `CURRENT_TIMESTAMP`                                      | Auto-updates on modification                            |
 
