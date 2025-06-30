@@ -69,6 +69,8 @@ graph TB
     end
 ```
 
+*Note: The "Background Workers," "Message Queue," and "Rate Limiter" components depicted here represent the mature architectural vision. Initial stack implementations will feature simplified, in-process versions of these capabilities as detailed in `docs/Stacks.md`.*
+
 ### Component Architecture
 
 | Component              | Purpose                                                                                                                                                                                             | Technology Examples                      |
@@ -78,7 +80,7 @@ graph TB
 | **Backend API**        | Core application logic per stack implementation                                                                                                                                                       | Django, Node.js, Go, .NET                |
 | **WebSocket Server**   | Real-time communication for live logs and updates                                                                                                                                                     | Socket.io, native WebSocket                |
 | **Rate Limiter**       | Request throttling and abuse prevention                                                                                                                                                               | Redis-based distributed cache              |
-| **Primary Database**   | Persistent storage for application data                                                                                                                                                             | PostgreSQL, MySQL                        |
+| **Primary Database**   | Persistent storage for application data                                                                                                                                                             | PostgreSQL                               |
 | **Background Workers** | Asynchronous task processing                                                                                                                                                                        | Celery, Bull Queue, Go routines            |
 | **Object Storage**     | Large file and log storage                                                                                                                                                                            | AWS S3, MinIO                            |
 
@@ -103,6 +105,8 @@ sequenceDiagram
     W-->>F: WebSocket Update
     F-->>U: Real-time Feedback
 ```
+
+*Note: In initial stack implementations, the "Workers" (W) component may represent in-process asynchronous tasks within the "Backend API" (B) rather than a separate distributed worker system. The data flow remains conceptually similar, with results eventually propagated to the frontend.*
 
 ---
 
