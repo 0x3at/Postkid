@@ -6,7 +6,9 @@
 
 ## 📋 Executive Summary
 
-The API Playground is a self-hosted, multi-tenant platform designed to empower developers in defining, testing, and monitoring API endpoints through an intuitive web interface. This document serves as the definitive technical specification for building identical application instances across multiple technology stacks.
+The API Playground is a self-hosted, multi-tenant platform designed to empower developers in defining, testing, and monitoring API endpoints through an intuitive web interface.
+
+This document serves as the definitive technical specification for building identical application instances across multiple technology stacks.
 
 ### Primary Objectives
 
@@ -33,7 +35,9 @@ The API Playground provides a robust environment for API interaction, focusing o
 
 ## 🏗️ System Architecture
 
-The API Playground's architecture is designed for scalability, maintainability, and consistent functionality across diverse technology stacks. The core components remain constant, irrespective of the backend or frontend framework used.
+The API Playground's architecture is designed for scalability, maintainability, and consistent functionality across diverse technology stacks.
+
+The core components remain constant, irrespective of the backend or frontend framework used.
 
 ### High-Level Architecture
 
@@ -69,7 +73,7 @@ graph TB
     end
 ```
 
-*Note: The "Background Workers," "Message Queue," and "Rate Limiter" components depicted here represent the mature architectural vision. Initial stack implementations will feature simplified, in-process versions of these capabilities as detailed in `docs/Stacks.md`.*
+*Note: The "Background Workers," "Message Queue," and "Rate Limiter" components depicted here represent the mature architectural vision. Initial stack implementations will feature simplified, in-process versions of these capabilities as detailed in `../Tech-Stacks/Technology Stacks.md`.*
 
 ### Component Architecture
 

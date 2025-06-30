@@ -1,7 +1,6 @@
-
 # API Playground - Java/Spring Boot + Angular Stack Architecture ☕
 
-This document provides a detailed technical reference for the Java/Spring Boot and Angular implementation of the API Playground application. It aligns with `docs/YellowPaper.md` and the simplified technology stack in `docs/Stacks.md`. This guide covers system architecture, component responsibilities, dependencies, project structure, security, deployment, and testing.
+This document provides a detailed technical reference for the Java/Spring Boot and Angular implementation of the API Playground application. It aligns with `../../Specs/Yellow Paper.md` and the simplified technology stack in `../../Tech-Stacks/Technology Stacks.md`. This guide covers system architecture, component responsibilities, dependencies, project structure, security, deployment, and testing.
 
 ---
 
@@ -9,10 +8,10 @@ This document provides a detailed technical reference for the Java/Spring Boot a
 
 This stack features a Java backend built with Spring Boot 3.2 (including Spring Web and Spring Security 6) and an Angular 17 frontend (using TypeScript 5.0). The backend uses Spring Data JPA with Hibernate 6.2 for data access to PostgreSQL 15 (with HikariCP for connection pooling). Authentication is JWT-based via Spring Security. The focus is on leveraging Spring Boot's robust ecosystem for a reliable backend and Angular's comprehensive framework for a feature-rich frontend.
 
-**Stack Highlights (as per `docs/Stacks.md`):**
+**Stack Highlights (as per `../../Tech-Stacks/Technology Stacks.md`):**
 -   **Backend (Spring Boot):** Java, Spring Boot 3.2, Spring Web, Spring Security 6. Spring Data JPA with Hibernate 6.2 for ORM to PostgreSQL 15 (HikariCP). JWT for authentication. Bucket4j for rate limiting. SpringDoc OpenAPI 3 for API documentation. Initial task processing via Spring `@Async` methods. Build with Maven 3.9 or Gradle 8.0. Code quality via SpotBugs, Checkstyle, JaCoCo.
 -   **Frontend (Angular):** Angular 17, TypeScript 5.0. UI with Angular Material and CDK. State management with NgRx and RxJS. Angular HttpClient for API calls. Angular Reactive Forms. Testing with Jasmine and Karma. Build with Angular CLI.
--   **Objective:** To deliver a fully functional API Playground instance using the Java/Spring Boot and Angular stack, adhering to project core requirements and the streamlined technology choices in `docs/Stacks.md`. References to `common_foundations.md` are incorrect.
+-   **Objective:** To deliver a fully functional API Playground instance using the Java/Spring Boot and Angular stack, adhering to project core requirements and the streamlined technology choices in `../../Tech-Stacks/Technology Stacks.md`. References to `common_foundations.md` are incorrect.
 
 ---
 
@@ -131,7 +130,7 @@ flowchart TB
 
 ## 3. Component Responsibilities
 
-Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper.md`:
+Component responsibilities are defined by `../../Tech-Stacks/Technology Stacks.md` and `../../Specs/Yellow Paper.md`:
 
 -   **Angular Frontend (Angular 17, TypeScript 5.0):**
     -   Builds the client-side Single-Page Application (SPA).
@@ -160,7 +159,7 @@ Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper
 
 ## 4. Dependencies
 
-Key dependencies are specified in `docs/Stacks.md`. Versions should be pinned in `pom.xml` (Maven) or `build.gradle` (Gradle) for backend, and `package.json` for frontend.
+Key dependencies are specified in `../../Tech-Stacks/Technology Stacks.md`. Versions should be pinned in `pom.xml` (Maven) or `build.gradle` (Gradle) for backend, and `package.json` for frontend.
 
 **Backend (Java/Spring Boot 3.2):**
 | Dependency (Maven groupId:artifactId)   | Version      | Purpose                                      |
@@ -273,7 +272,7 @@ api-playground-angular/
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `YellowPaper.md` and implemented using Spring Data JPA entities, mapped to PostgreSQL tables. Flyway can be used for schema migrations.
+The core data model is defined by `../../Specs/Yellow Paper.md` and [`../../Models/Data Models.md`](../../Models/Data%20Models.md), and implemented using Spring Data JPA entities, mapped to PostgreSQL tables. Flyway can be used for schema migrations. The API interactions are further detailed in `../../API-Reference/`.
 
 ```mermaid
 %%{init: {
@@ -371,7 +370,7 @@ erDiagram
 
 ## 7. Service & Background Task Flows (Simplified)
 
-As per `docs/Stacks.md`, complex asynchronous processing (RabbitMQ) is deferred. The Spring Boot backend will use Spring's `@Async` annotation for simple, in-process asynchronous tasks.
+As per `../../Tech-Stacks/Technology Stacks.md`, complex asynchronous processing (RabbitMQ) is deferred. The Spring Boot backend will use Spring's `@Async` annotation for simple, in-process asynchronous tasks.
 
 -   **API Request Execution Flow (`POST /api/test/{endpoint_id}/` or ad-hoc):**
     1.  **Client Request (Angular):** Angular frontend sends an API execution request to the Spring Boot backend.
@@ -400,7 +399,7 @@ As per `docs/Stacks.md`, complex asynchronous processing (RabbitMQ) is deferred.
 
 ## 8. Authentication & Security Patterns
 
-Security measures align with `YellowPaper.md` and are implemented using Spring Security 6 and related practices as specified in `docs/Stacks.md`.
+Security measures align with `../../Specs/Yellow Paper.md` and are implemented using Spring Security 6 and related practices as specified in `../../Tech-Stacks/Technology Stacks.md`.
 
 -   **Spring Security 6:**
     *   Provides comprehensive security services including authentication and authorization.
@@ -429,13 +428,13 @@ Security measures align with `YellowPaper.md` and are implemented using Spring S
 
 ## 9. API Design Conventions & Documentation
 
--   **API Specification:** Adheres to `docs/Endpoints.md`.
+-   **API Specification:** Adheres to `../../API-Reference/` (once populated).
 -   **Documentation Generation (`SpringDoc OpenAPI 3`):**
     *   `springdoc-openapi-starter-webmvc-ui` dependency provides automatic generation of OpenAPI 3.0 specification and Swagger UI.
     *   Annotations like `@Operation`, `@Parameter` can enhance the generated documentation.
 -   **Versioning:** API versioning (e.g., `/api/v1/`) implemented in request mappings.
 -   **Response Format:** Standard Spring Boot JSON responses. Consistent error DTOs using `@ControllerAdvice` and `@ExceptionHandler`.
--   **Data Transfer Objects (DTOs):** Used for request and response payloads to decouple API contracts from JPA entities. Mapping can be done manually or with libraries like MapStruct (though not explicitly in `Stacks.md`, it's a common practice).
+-   **Data Transfer Objects (DTOs):** Used for request and response payloads to decouple API contracts from JPA entities. Mapping can be done manually or with libraries like MapStruct (though not explicitly in `../../Tech-Stacks/Technology Stacks.md`, it's a common practice).
 
 ---
 
@@ -451,13 +450,13 @@ The Angular frontend architecture is detailed in section 5 ("Project Structure")
     *   Angular's `HttpClient` for all communication with the Spring Boot backend.
     *   HTTP Interceptors (`HttpInterceptor`) are used to automatically attach JWT bearer tokens to outgoing requests and handle global error responses (e.g., 401 for token expiry).
 -   **Routing:** Angular Router for client-side navigation and lazy loading of feature modules.
--   **Testing:** Jasmine and Karma for unit and component tests. Playwright/Cypress for E2E if essential (as per `Stacks.md`).
+-   **Testing:** Jasmine and Karma for unit and component tests. Playwright/Cypress for E2E if essential (as per `../../Tech-Stacks/Technology Stacks.md`).
 
 ---
 
 ## 11. Deployment Topology
 
-Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`, using Docker containers.
+Deployment strategy aligns with `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md`, using Docker containers.
 
 **Development Environment:**
 -   **Spring Boot API:** Run using Maven (`mvn spring-boot:run`) or Gradle (`gradle bootRun`), or directly from an IDE. Embedded Tomcat server.
@@ -509,7 +508,7 @@ graph TD
 
 ## 12. Testing Strategy
 
-Testing adheres to `YellowPaper.md` and uses stack-specific tools from `docs/Stacks.md`.
+Testing adheres to `../../Specs/Yellow Paper.md` and uses stack-specific tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 **Backend (Spring Boot API):**
 -   **Unit Tests (`JUnit 5`, `Mockito`):** Test individual classes (services, utility components) in isolation. Mock dependencies using Mockito.
@@ -526,7 +525,7 @@ Testing adheres to `YellowPaper.md` and uses stack-specific tools from `docs/Sta
     *   Angular's `TestBed` for configuring testing modules and injecting dependencies.
     *   Mock services and child components as needed.
 -   **End-to-End Tests (`Playwright`/`Cypress` - if essential):**
-    *   As per `Stacks.md`, if deemed essential for critical user flows.
+    *   As per `../../Tech-Stacks/Technology Stacks.md`, if deemed essential for critical user flows.
 
 **CI/CD (`GitHub Actions`):**
 -   Automated execution of backend (Maven/Gradle test) and frontend (`ng test`, `ng e2e` if applicable) tests.

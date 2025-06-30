@@ -1,7 +1,6 @@
-
 # API Playground - Python/Django + React Stack Architecture 🐍
 
-This document provides a detailed technical reference for the Python/Django and React implementation of the API Playground application. It aligns with the specifications outlined in `docs/YellowPaper.md` and the simplified technology choices in `docs/Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches for this specific stack.
+This document provides a detailed technical reference for the Python/Django and React implementation of the API Playground application. It aligns with the specifications outlined in `docs/Specs/Yellow Paper.md` and the simplified technology choices in `docs/Tech-Stacks/Technology Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches for this specific stack.
 
 ---
 
@@ -9,16 +8,16 @@ This document provides a detailed technical reference for the Python/Django and 
 
 This implementation pairs a Python backend, utilizing the Django framework (version 5.0) and Django REST Framework (DRF version 3.14), with a React frontend (version 18 with TypeScript 5.0). The focus is on leveraging Django's robust capabilities for rapid development of the backend API and React's modern features for a dynamic and responsive user interface, built with Vite 4.0.
 
-**Stack Highlights (as per `docs/Stacks.md`):**
+**Stack Highlights (as per `docs/Tech-Stacks/Technology Stacks.md`):**
 - **Backend:** Django 5.0 for core logic, Django REST Framework 3.14 for RESTful APIs, `django-rest-framework-simplejwt` for authentication, and `django-ratelimit` for rate limiting. PostgreSQL 15 serves as the database. Task processing will initially be synchronous or use simple Django Background Tasks, deferring Celery.
 - **Frontend:** React 18 with TypeScript 5.0, built using Vite 4.0. Key libraries include Tailwind CSS 3.3, Headless UI, Zustand for state management, React Query (TanStack Query) for data fetching, React Router 6 for navigation, React Hook Form with Zod for forms, and Axios for HTTP requests.
-- **Objective:** To deliver a fully functional API Playground instance adhering to the project's core requirements, emphasizing the streamlined technology stack defined in `docs/Stacks.md` for efficient development and deployment. `common_foundations.md` is not a specified source of truth; primary references are `YellowPaper.md` and `Stacks.md`.
+- **Objective:** To deliver a fully functional API Playground instance adhering to the project's core requirements, emphasizing the streamlined technology stack defined in `docs/Tech-Stacks/Technology Stacks.md` for efficient development and deployment. `common_foundations.md` is not a specified source of truth; primary references are `docs/Specs/Yellow Paper.md` and `docs/Tech-Stacks/Technology Stacks.md`.
 
 ---
 
-## 2. System Architecture Diagram
+## 2. System Architecture Diagram (Initial Simplified Implementation)
 
-The following flowchart illustrates the high-level architecture of the Django + React implementation, detailing the interaction between client, gateway, backend, services, data, workers, and external services layers. This modular design ensures scalability, maintainability, and clear separation of concerns.
+The following flowchart illustrates the high-level architecture of the Django + React implementation for the initial phase, emphasizing simplified, in-process task handling. This modular design ensures scalability, maintainability, and clear separation of concerns.
 
 ```mermaid
 %%{init: {
@@ -50,58 +49,57 @@ The following flowchart illustrates the high-level architecture of the Django + 
 }}%%
 
 flowchart TB
-    subgraph Stack_1_System_Diagram["🐍 Stack 1 - Django System"]
+    subgraph Stack_1_System_Diagram["🐍 Stack 1 - Django System (Initial Phase)"]
         subgraph Client["Client Layer"]
             direction LR
-            React["⚛️ React + Vite"] ~~~ RN["📱 React Native"]
+            React["⚛️ React + Vite"]
         end
         
         subgraph Gateway["Gateway Layer"]
             direction LR
-            Nginx["⚖️ Nginx LB"] ~~~ SSL1["🔒 SSL Termination"]
+            Nginx["⚖️ Nginx LB / Reverse Proxy"]
         end
         
         subgraph Backend["Backend Layer"]
             direction LR
-            Dj["🐍 Django"] ~~~ DRF["🔌 DRF"] ~~~ Auth["🔑 SimpleJWT"] ~~~ Mw["🛡️ Custom Middleware"]
+            Dj["🐍 Django + DRF"]
+            Dj --> Auth["🔑 SimpleJWT"]
+            Dj --> RateLimitLib["🚫 django-ratelimit"]
+            Dj --> TaskHandling["🔄 Sync / Django BG Tasks (In-Process)"]
         end
         
-        subgraph Services["Services Layer"]
+        subgraph Services["Services Layer (within Django Apps)"]
             direction LR
-            ReqSvc["📡 Request Execution"] ~~~ ColSvc["📁 Collection Mgmt"] ~~~ UserSvc["👤 User Mgmt"] ~~~ EnvSvc["🌍 Environment Mgmt"]
+            ReqSvc["📡 Request Execution Service"]
+            ColSvc["📁 Collection Mgmt Service"]
+            UserSvc["👤 User Mgmt Service"]
         end
         
         subgraph Data["Data Layer"]
             direction LR
-            PG["🐘 PostgreSQL"] ~~~ RD["⚡ Redis Cache"] ~~~ FS["☁️ S3 / Local FS"]
-        end
-        
-        subgraph Workers["Workers Layer"]
-            direction LR
-            Celery["🌿 Celery Workers"] ~~~ Beat["🥁 Celery Beat"] ~~~ Queue["📋 Redis Queue"]
+            PG["🐘 PostgreSQL"]
+            RD["⚡ Redis Cache (Optional for Rate Limit)"]
         end
         
         subgraph External["External Services"]
             direction LR
-            SMTP["📧 SMTP"] ~~~ Sentry["🐛 Sentry"] ~~~ APIs["🔌 Third-party APIs"]
+            APIs["🔌 Third-party APIs (Target for execution)"]
         end
     end
 
     %% Connections
     React --> Nginx
-    RN --> Nginx
-    Nginx --> SSL1
-    SSL1 --> Dj
-    Dj --> DRF
-    DRF --> Auth
-    DRF --> Mw
-    Dj --> ReqSvc & ColSvc & UserSvc & EnvSvc
-    ReqSvc --> Celery
-    Celery --> Queue
-    Celery --> APIs
-    Queue --> Beat
-    Dj --> PG & RD & FS
-    Dj --> SMTP & Sentry
+    Nginx --> Dj
+
+    Dj --> ReqSvc
+    Dj --> ColSvc
+    Dj --> UserSvc
+
+    ReqSvc --> TaskHandling
+    TaskHandling --> APIs # External API calls made here
+
+    Dj --> PG
+    RateLimitLib -.-> RD # django-ratelimit can optionally use Redis
 
     %% Node styling
     classDef clientNode fill:#ff9e64,stroke:#ff7043,stroke-width:2px,color:#1a1b26,font-weight:600
@@ -109,17 +107,16 @@ flowchart TB
     classDef backendNode fill:#e0af68,stroke:#d19a66,stroke-width:2px,color:#1a1b26,font-weight:600
     classDef serviceNode fill:#bb9af7,stroke:#9d7cd8,stroke-width:2px,color:#1a1b26,font-weight:600
     classDef databaseNode fill:#9ece6a,stroke:#73b25a,stroke-width:2px,color:#1a1b26,font-weight:600
-    classDef workerNode fill:#7aa2f7,stroke:#5a7ec5,stroke-width:2px,color:#1a1b26,font-weight:600
+    classDef taskNode fill:#7aa2f7,stroke:#5a7ec5,stroke-width:2px,color:#1a1b26,font-weight:600
     classDef externalNode fill:#f7768e,stroke:#db5a6b,stroke-width:2px,color:#1a1b26,font-weight:600
 
     %% Apply styles
-    class React,RN clientNode
-    class Nginx,SSL1 gatewayNode
-    class Dj,DRF,Auth,Mw backendNode
-    class ReqSvc,ColSvc,UserSvc,EnvSvc serviceNode
-    class PG,RD,FS databaseNode
-    class Celery,Beat,Queue workerNode
-    class SMTP,Sentry,APIs externalNode
+    class React clientNode
+    class Nginx gatewayNode
+    class Dj,Auth,RateLimitLib,TaskHandling backendNode
+    class ReqSvc,ColSvc,UserSvc serviceNode
+    class PG,RD databaseNode
+    class APIs externalNode
 
     %% Subgraph styling
     style Stack_1_System_Diagram fill:#1a1b26,stroke:#3b4261,stroke-width:2px,color:#c0caf5
@@ -128,11 +125,10 @@ flowchart TB
     style Backend fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
     style Services fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
     style Data fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
-    style Workers fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
     style External fill:#24283b,stroke:#3b4261,stroke-width:1px,color:#c0caf5
 ```
 
-**Explanation:** The architecture is layered to separate concerns effectively. The client layer (React and React Native) handles user interaction, the gateway layer (Nginx) manages load balancing and security, the backend layer (Django and DRF) processes API requests, the services layer encapsulates business logic, the data layer persists and caches information, and the workers layer (Celery) handles asynchronous tasks. External services integrate for monitoring, notifications, and third-party API interactions.
+**Explanation:** The architecture is layered. The React client interacts via Nginx (gateway) with the Django backend. Django, using DRF, handles API requests, authentication (SimpleJWT), and rate limiting (`django-ratelimit`). Business logic is encapsulated in services within Django apps. Data is persisted in PostgreSQL, with Redis as an optional cache for rate limiting. External API calls for testing are made directly or via simple in-process background tasks. Complex workers (Celery), S3, SMTP, and Sentry are deferred for the initial simplified build, aligning with `docs/Tech-Stacks/Technology Stacks.md`.
 
 ---
 
@@ -150,21 +146,20 @@ Each component in the Django + React stack is assigned specific roles to ensure 
   - Manages authentication, routing, and business logic execution.
 - **SimpleJWT (Django REST Framework Extension):**
   - Handles JSON Web Token (JWT) authentication.
-  - Issues short-lived access tokens (15 minutes) and rotating refresh tokens (7 days) for secure session management.
+  - Issues short-lived access tokens (e.g., 15 minutes) and rotating refresh tokens (e.g., 7 days) for secure session management.
   - Implements token blacklisting to prevent unauthorized access after logout.
-- **Celery & Redis:**
-  - Celery serves as an asynchronous task queue for executing background jobs such as API request testing.
-  - Redis acts as both the message broker for Celery and an in-memory cache for rate-limiting and temporary data storage.
-  - Supports exponential backoff for retries on failed tasks and scheduled tasks via Celery Beat for periodic cleanup.
+- **Task Processing (Synchronous / Django Background Tasks):**
+  - Initially, API request execution and other tasks will be handled synchronously within the Django request-response cycle.
+  - For slightly longer operations that should not block the main thread but don't require a full distributed task queue, simple Django Background Tasks (e.g., using `django-background-tasks` or a custom lightweight solution) will be used. This defers the complexity of Celery and a dedicated message broker like Redis for the initial phase.
+- **`django-ratelimit`:**
+  - Provides rate limiting capabilities. Can use database, cache (Redis if configured), or in-memory stores. For the initial simplified setup, database or in-memory is sufficient, with Redis as an option for scalability.
 - **PostgreSQL:**
   - Primary relational database for storing structured data like users, collections, endpoints, and logs.
   - Leverages JSONB fields for flexible storage of API schemas and request/response data.
-  - Ensures data integrity through foreign key constraints and indexing for performance.
-- **S3 / MinIO:**
-  - Object storage solution for static files, exported data, or large payloads.
-  - Compatible with AWS S3 or self-hosted MinIO for cost-effective scalability.
+- **S3 / MinIO (Future Consideration):**
+  - Object storage for large files, exports, or extensive log archiving is a future consideration and not part of the initial simplified stack.
 
-**Note:** Components are chosen to balance Django's full-featured framework with React's modern frontend capabilities, ensuring both developer productivity and application performance.
+**Note:** Components are chosen to align with the simplified stack defined in `docs/Tech-Stacks/Technology Stacks.md`, prioritizing rapid development for the initial phase.
 
 ---
 
@@ -174,13 +169,19 @@ The following table lists the key dependencies for both backend and frontend com
 
 | Package                         | Version | Purpose                       | Justification                                    |
 |---------------------------------|---------|-------------------------------|-------------------------------------------------|
-| **django**                     | 4.x     | Web framework                | Batteries-included, mature community support    |
-| **djangorestframework**        | 3.x     | REST toolkit                 | Simplifies API creation with serializers and viewsets |
+| **django**                     | 5.0.x   | Web framework                | Aligns with `Tech-Stacks.md` & latest features  |
+| **djangorestframework**        | 3.14.x  | REST toolkit                 | Aligns with `Tech-Stacks.md`                    |
 | **djangorestframework-simplejwt** | latest | JWT authentication          | Supports token blacklisting and rotation        |
-| **celery**                     | 5.x     | Async task queue             | Handles scheduling and retries for background tasks |
-| **redis**                      | 4.x     | Broker & cache               | High-performance in-memory store for queues and caching |
+| **django-cors-headers**         | latest  | CORS header management       | Standard for Django CORS handling               |
+| **django-ratelimit**            | latest  | Rate limiting                | Specified in `Tech-Stacks.md`                   |
+| **drf-spectacular**             | latest  | OpenAPI 3.0 schema gen.    | Specified in `Tech-Stacks.md`                   |
 | **psycopg2-binary**            | latest  | PostgreSQL adapter           | Stable and performant database connection       |
-| **boto3**                      | latest  | AWS S3 SDK                   | Official SDK, compatible with MinIO for storage |
+| **gunicorn**                    | latest  | WSGI HTTP Server             | Common production server for Django             |
+| **python-decouple**             | latest  | Settings management          | Easy env var based config (per TS)          |
+| **pytest-django**               | latest  | Django testing with pytest   | Specified in `Tech-Stacks.md`                   |
+| **factory-boy**                 | latest  | Test data generation         | Specified in `Tech-Stacks.md`                   |
+| **pytest-cov**                  | latest  | Test coverage                | Specified in `Tech-Stacks.md`                   |
+| **black, flake8, isort, mypy**  | latest  | Linting & Type Checking      | Specified in `Tech-Stacks.md`                   |
 | **react**                      | 18.x    | Frontend UI library          | Modern features like hooks and concurrent mode  |
 | **vite**                       | latest  | Dev server & bundler         | Fast hot module replacement (HMR) and builds    |
 | **zustand**                    | latest  | State management             | Lightweight API for managing React state        |
@@ -249,13 +250,11 @@ Postkid/
 │   │   └── custom_permissions.py
 │   ├── middleware/            # Custom middleware
 │   │   ├── __init__.py
-│   │   └── request_logging.py
+│   │   └── request_logging.py # Example: for audit logging or custom headers
 │   └── utils/                 # Utility functions
 │       ├── __init__.py
-│       └── helpers.py         # Example: utility functions
-├── config/                    # Project-level configuration
-│   └── celery.py              # Celery configuration
-├── static/                    # Static files
+│       └── helpers.py         # Example: general utility functions
+├── static/                    # Static files (though typically served by Nginx in prod)
 └── manage.py                  # Django management script
 ```
 
@@ -311,33 +310,44 @@ erDiagram
     endpoints ||--o{ request_logs : logs
 ```
 
-**Explanation:** The diagram illustrates a hierarchical relationship where users own multiple collections, each collection contains multiple endpoints, and each endpoint is linked to multiple request logs. This structure ensures traceability of API interactions and aligns with the shared data model described in `data_model_reference.md`.
+**Explanation:** The diagram illustrates a hierarchical relationship where users own multiple collections, each collection contains multiple endpoints, and each endpoint is linked to multiple request logs. This structure ensures traceability of API interactions and aligns with the shared data model described in `../../Models/Data Models.md`.
 
 ---
 
-## 7. Service & Background Task Flows
+## 7. Service & Background Task Flows (Simplified Initial Implementation)
 
-The following key workflows are implemented to handle asynchronous tasks and service interactions, leveraging Celery for background processing:
+For the initial simplified implementation, complex background task queues like Celery are deferred. Tasks will be handled either synchronously or using simple in-process background task mechanisms if provided by Django or a lightweight third-party app.
 
-- **execute_api_request:**
-  - Initiated when a user triggers a test API call via the `/api/v1/test/{id}` endpoint.
-  - The request is queued via Celery for asynchronous execution of the HTTP call to the external API.
-  - On failure, retries are attempted with an exponential backoff strategy to handle transient errors.
-  - Results are logged to the database, and status updates are pushed to the client via WebSocket (using Django Channels if implemented).
-- **cleanup_tasks:**
-  - Scheduled via Celery Beat to periodically purge outdated logs or temporary data based on retention policies.
-  - Ensures database size remains manageable and complies with data retention requirements.
-- **notifications:**
-  - Triggered on events like collection sharing or critical errors.
-  - Sends emails via SMTP integration for user notifications or alerts.
+- **`execute_api_request` (API Endpoint: `/api/test/{endpoint_id}/` or similar):**
+  - **Initiation:** User triggers an API test call from the frontend.
+  - **Processing (Synchronous or Simple Async):**
+    - The Django view/DRF ViewSet receives the request.
+    - The associated service function directly prepares and executes the HTTP call to the external target API using a library like `requests` (synchronously) or `httpx` (for async views if used).
+    - Timeout handling for the external call is managed by the HTTP client library.
+    - **No Celery Queuing:** The request is not handed off to a separate Celery worker in this initial phase.
+  - **Result Handling:**
+    - The response (status, headers, body, duration) from the external API is captured.
+    - Details are logged to the `RequestLog` model in the PostgreSQL database.
+    - The result is returned to the client.
+  - **WebSocket Updates:** Real-time updates via WebSockets (e.g., Django Channels) are a future consideration, not part of this initial simplified flow.
 
-**Best Practice:** Configure Celery with appropriate worker concurrency levels and retry policies to balance throughput and resource usage. Use monitoring tools like Flower to track task execution and troubleshoot failures.
+- **`cleanup_tasks` (e.g., purging old `RequestLog` entries):**
+  - **Implementation:** This would likely be implemented as a Django management command.
+  - **Scheduling:** The management command would be scheduled to run periodically using an OS-level cron job or a similar scheduler external to the Django application process itself for reliability. Django Background Tasks could potentially also manage this if a very simple in-app scheduler is preferred and the task is not resource-intensive.
+  - **No Celery Beat:** Celery Beat is not used in this phase.
+
+- **`notifications` (e.g., email on critical error or specific user actions):**
+  - **Implementation:** For critical notifications that must be sent reliably, they might be handled synchronously as part of the request that triggers them (e.g., using Django's `send_mail` function).
+  - For non-critical notifications, if `django-background-tasks` or a similar lightweight library is integrated, they could be queued through that. Otherwise, they might be logged, and a separate process/script could handle batch sending, or they are deferred.
+  - **No Celery Queuing for Emails:** Emails are not queued via Celery in this phase.
+
+**Rationale for Simplification:** This approach aligns with `docs/Tech-Stacks/Technology Stacks.md` which specifies: *"Task Processing: Initial: Synchronous or simple Django Background Tasks. Defer Celery unless Redis is actively used for other core features."* This prioritizes rapid initial development by reducing operational complexity.
 
 ---
 
 ## 8. Authentication & Security Patterns
 
-Security measures align with `YellowPaper.md` and are implemented using specific Django tools from `docs/Stacks.md`.
+Security measures align with `../../Specs/Yellow Paper.md` and are implemented using specific Django tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 - **JWT Authentication (`django-rest-framework-simplejwt`):**
   - Handles token-based authentication (access and refresh tokens).
@@ -367,7 +377,7 @@ Security measures align with `YellowPaper.md` and are implemented using specific
 
 ## 9. API Design Conventions & Documentation
 
-- **API Specification:** Endpoints adhere to `docs/Endpoints.md`.
+- **API Specification:** Endpoints adhere to `../../API-Reference/` (once populated).
 - **Documentation Generation (`drf-spectacular`):**
   - Used to generate an OpenAPI 3.0 schema and Swagger UI for the API. This provides interactive documentation.
 - **Versioning:** API will be versioned (e.g., `/api/v1/`).
@@ -394,7 +404,7 @@ The React frontend architecture is detailed in section 5 ("Domain-Driven Design 
 
 ## 11. Deployment Topology
 
-Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`.
+Deployment strategy aligns with `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md`.
 
 **Development Environment (Docker Compose):**
 - **Orchestration:** `docker-compose.yml` defines services for:
@@ -457,7 +467,7 @@ This diagram illustrates Nginx serving static React files (potentially via CDN) 
 
 ## 12. Testing Strategy
 
-Testing adheres to `YellowPaper.md` guidelines and uses stack-specific tools from `docs/Stacks.md`.
+Testing adheres to `../../Specs/Yellow Paper.md` guidelines and uses stack-specific tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 **Backend (Python/Django):**
 - **Unit Tests (`pytest-django`):**
@@ -479,7 +489,7 @@ Testing adheres to `YellowPaper.md` guidelines and uses stack-specific tools fro
 - **API Mocking (`msw` - Mock Service Worker):**
     - Intercept HTTP requests made by the frontend during tests and return mock responses. This allows testing of data fetching logic, state updates, and UI rendering based on API responses without actual backend calls.
 - **End-to-End Tests (Future Consideration, e.g., Playwright/Cypress):**
-    - As specified in `YellowPaper.md`, full E2E tests covering user journeys. For the simplified stack, focus is on unit/integration for frontend and backend first.
+    - As specified in `../../Specs/Yellow Paper.md`, full E2E tests covering user journeys. For the simplified stack, focus is on unit/integration for frontend and backend first.
 
 **CI/CD (`GitHub Actions`):**
 - All tests (backend and frontend) will be run automatically on every push and pull request to ensure code quality and prevent regressions.
