@@ -1,7 +1,6 @@
-
 # API Playground - Node.js/TypeScript Stack Architecture 🟨
 
-This document provides a detailed technical reference for the Node.js/TypeScript implementation of the API Playground. This stack features an Express.js backend (Node.js 20, Express 4.18) and a Next.js frontend (Next.js 14, TypeScript, App Router). It aligns with `docs/YellowPaper.md` and the simplified technology choices in `docs/Stacks.md`. This guide covers system architecture, component responsibilities, dependencies, project structure, security, deployment, and testing.
+This document provides a detailed technical reference for the Node.js/TypeScript implementation of the API Playground. This stack features an Express.js backend (Node.js 20, Express 4.18) and a Next.js frontend (Next.js 14, TypeScript, App Router). It aligns with `../../Specs/Yellow Paper.md` and the simplified technology choices in `../../Tech-Stacks/Technology Stacks.md`. This guide covers system architecture, component responsibilities, dependencies, project structure, security, deployment, and testing.
 
 ---
 
@@ -9,10 +8,10 @@ This document provides a detailed technical reference for the Node.js/TypeScript
 
 This stack leverages a Node.js backend built with Express.js and TypeScript, providing a dedicated API service. The frontend is a modern React application built with Next.js 14 (using the App Router and TypeScript). Data persistence is handled by PostgreSQL 15, with Prisma 5.0 as the ORM. The focus is on a full-stack TypeScript experience, emphasizing performance and developer productivity.
 
-**Stack Highlights (as per `docs/Stacks.md`):**
+**Stack Highlights (as per `../../Tech-Stacks/Technology Stacks.md`):**
 -   **Backend (Express.js):** Node.js 20, Express 4.18, TypeScript. Authentication via Passport.js (JWT strategy). Prisma 5.0 for ORM with PostgreSQL. API documentation using Swagger JSDoc. Rate limiting with `express-rate-limit`. Initial task processing via simple async operations. Build with `esbuild` or `tsc`.
 -   **Frontend (Next.js):** Next.js 14 (App Router), TypeScript. UI with Tailwind CSS and `shadcn/ui` (or Radix UI). State management with Zustand and TanStack Query. Forms with React Hook Form and Zod. HTTP communication using native `fetch`.
--   **Objective:** To deliver a fully functional API Playground instance using a Node.js-centric stack, adhering to project core requirements and the streamlined technology choices in `docs/Stacks.md`. References to `common_foundations.md` are incorrect; `YellowPaper.md` and `Stacks.md` are the primary sources.
+-   **Objective:** To deliver a fully functional API Playground instance using a Node.js-centric stack, adhering to project core requirements and the streamlined technology choices in `../../Tech-Stacks/Technology Stacks.md`. References to `common_foundations.md` are incorrect; `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md` are the primary sources.
 
 ---
 
@@ -131,7 +130,7 @@ flowchart TB
 
 ## 3. Component Responsibilities
 
-Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper.md`:
+Component responsibilities are defined by `../../Tech-Stacks/Technology Stacks.md` and `../../Specs/Yellow Paper.md`:
 
 -   **Next.js Frontend (Next.js 14, TypeScript, App Router):**
     -   Builds the client-side Single-Page Application (SPA).
@@ -158,7 +157,7 @@ Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper
 
 ## 4. Dependencies
 
-Key dependencies are specified in `docs/Stacks.md`. Versions should be pinned in `package.json` files for both backend and frontend.
+Key dependencies are specified in `../../Tech-Stacks/Technology Stacks.md`. Versions should be pinned in `package.json` files for both backend and frontend.
 
 **Backend (Node.js 20 / Express 4.18 / TypeScript):**
 | Package                 | Version      | Purpose                                      |
@@ -258,13 +257,13 @@ api-playground-node/
 -   **`packages/api`**: Contains the standalone Express.js backend. It has its own `package.json`, `tsconfig.json`, and `prisma` schema. Logic is organized into modules (e.g., by feature/domain).
 -   **`packages/web`**: Contains the Next.js frontend application, also with its own `package.json` and `tsconfig.json`. It uses the App Router for file-system based routing and organization.
 -   **Monorepo Root**: Manages workspaces, shared dev dependencies (like Prettier, ESLint configs), and scripts to run/build both apps.
--   This separation ensures clear boundaries between the backend API and the frontend client, aligning with the distinct technology choices for each in `docs/Stacks.md`.
+-   This separation ensures clear boundaries between the backend API and the frontend client, aligning with the distinct technology choices for each in `../../Tech-Stacks/Technology Stacks.md`.
 
 ---
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `YellowPaper.md` and implemented in the Express.js backend using Prisma ORM, targeting PostgreSQL.
+The core data model is defined by `../../Specs/Yellow Paper.md` and implemented in the Express.js backend using Prisma ORM, targeting PostgreSQL.
 
 ```mermaid
 %%{init: {
@@ -355,13 +354,13 @@ erDiagram
 **Explanation:**
 -   Prisma models map to PostgreSQL tables. IDs are typically strings (`cuid()` or `uuid()`).
 -   JSON fields (`Json` type in Prisma) store flexible data like tags, headers, query parameters, and authConfig.
--   Relationships are defined as per `YellowPaper.md` and `docs/Endpoints.md`.
+-   Relationships are defined as per `../../Specs/Yellow Paper.md` and `../../API-Reference/` (once populated).
 
 ---
 
 ## 7. Service & Background Task Flows (Simplified)
 
-As per `docs/Stacks.md`, complex asynchronous processing with Bull/Agenda is deferred. The Express.js backend will handle API request execution primarily through simple asynchronous operations.
+As per `../../Tech-Stacks/Technology Stacks.md`, complex asynchronous processing with Bull/Agenda is deferred. The Express.js backend will handle API request execution primarily through simple asynchronous operations.
 
 -   **API Request Execution Flow (`POST /api/test/{endpoint_id}/` or ad-hoc):**
     1.  **Client Request (Next.js):** The Next.js frontend sends an API execution request to the Express.js backend.
@@ -388,7 +387,7 @@ As per `docs/Stacks.md`, complex asynchronous processing with Bull/Agenda is def
 
 ## 8. Authentication & Security Patterns
 
-Security measures align with `YellowPaper.md` and are implemented using libraries specified in `docs/Stacks.md` for the Express.js backend and Next.js frontend.
+Security measures align with `../../Specs/Yellow Paper.md` and are implemented using libraries specified in `../../Tech-Stacks/Technology Stacks.md` for the Express.js backend and Next.js frontend.
 
 -   **Authentication (Express.js Backend):**
     *   **`Passport.js` with `passport-jwt` Strategy:** The Express API uses Passport.js to authenticate requests using JWTs.
@@ -421,7 +420,7 @@ Security measures align with `YellowPaper.md` and are implemented using librarie
 
 ## 9. API Design Conventions & Documentation (Express.js Backend)
 
--   **API Specification:** Adheres to `docs/Endpoints.md`.
+-   **API Specification:** Adheres to `../../API-Reference/` (once populated).
 -   **Documentation Generation (`swagger-jsdoc`, `swagger-ui-express`):**
     *   JSDoc comments in Express route handlers and controller files are used by `swagger-jsdoc` to generate an OpenAPI 3.0 specification.
     *   `swagger-ui-express` serves the interactive Swagger UI from an Express endpoint.
@@ -449,7 +448,7 @@ The Next.js frontend architecture is detailed in section 5 ("Project Structure")
 
 ## 11. Deployment Topology
 
-Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`, using Docker containers.
+Deployment strategy aligns with `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md`, using Docker containers.
 
 **Development Environment (Monorepo with `npm/yarn/pnpm workspaces`):**
 -   **Express.js API:** Run using `nodemon` or `ts-node-dev` for TypeScript compilation and hot reloading.
@@ -501,7 +500,7 @@ graph TD
 
 ## 12. Testing Strategy
 
-Testing adheres to `YellowPaper.md` and uses stack-specific tools from `docs/Stacks.md`.
+Testing adheres to `../../Specs/Yellow Paper.md` and uses stack-specific tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 **Backend (Express.js API):**
 -   **Unit Tests (`Jest`):** Test individual functions, services, utilities. Mock dependencies (like Prisma Client methods, external service calls).

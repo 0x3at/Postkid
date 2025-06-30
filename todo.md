@@ -3,7 +3,7 @@
 
 ### 📊 Implementation Overview
 
-Each stack follows identical phases but leverages technology-specific patterns and best practices. All implementations share the same API contracts (`docs/Endpoints.md`) and conceptual data model (`docs/architecture/readme.md`), targeting a PostgreSQL database, while showcasing different architectural approaches as defined in `docs/Stacks.md` and `docs/YellowPaper.md`.
+Each stack follows identical phases but leverages technology-specific patterns and best practices. All implementations share the same API contracts (`docs/API-Reference/`) and conceptual data model (`docs/Architecture/Overall Architecture.md`), targeting a PostgreSQL database, while showcasing different architectural approaches as defined in `docs/Tech-Stacks/Technology Stacks.md` and `docs/Specs/Yellow Paper.md`.
 
 **Order of Implementation (Revised)**: Django → Node.js → Java → C#
 
@@ -340,7 +340,7 @@ Each stack follows identical phases but leverages technology-specific patterns a
 - [ ] **Services & Validation (Zod/Custom)**
   - Create services to encapsulate business logic for collections.
   - Use Zod schemas for validating request payloads for create/update operations.
-  - Ensure responses are structured according to `docs/Endpoints.md`.
+  - Ensure responses are structured according to `docs/API-Reference/`.
 
 **Frontend Tasks (Next.js):**
 - [ ] **Collection Management UI**

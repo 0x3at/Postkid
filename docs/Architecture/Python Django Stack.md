@@ -1,7 +1,6 @@
-
 # API Playground - Python/Django + React Stack Architecture 🐍
 
-This document provides a detailed technical reference for the Python/Django and React implementation of the API Playground application. It aligns with the specifications outlined in `docs/YellowPaper.md` and the simplified technology choices in `docs/Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches for this specific stack.
+This document provides a detailed technical reference for the Python/Django and React implementation of the API Playground application. It aligns with the specifications outlined in `docs/Specs/Yellow Paper.md` and the simplified technology choices in `docs/Tech-Stacks/Technology Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment strategies, and testing approaches for this specific stack.
 
 ---
 
@@ -9,10 +8,10 @@ This document provides a detailed technical reference for the Python/Django and 
 
 This implementation pairs a Python backend, utilizing the Django framework (version 5.0) and Django REST Framework (DRF version 3.14), with a React frontend (version 18 with TypeScript 5.0). The focus is on leveraging Django's robust capabilities for rapid development of the backend API and React's modern features for a dynamic and responsive user interface, built with Vite 4.0.
 
-**Stack Highlights (as per `docs/Stacks.md`):**
+**Stack Highlights (as per `docs/Tech-Stacks/Technology Stacks.md`):**
 - **Backend:** Django 5.0 for core logic, Django REST Framework 3.14 for RESTful APIs, `django-rest-framework-simplejwt` for authentication, and `django-ratelimit` for rate limiting. PostgreSQL 15 serves as the database. Task processing will initially be synchronous or use simple Django Background Tasks, deferring Celery.
 - **Frontend:** React 18 with TypeScript 5.0, built using Vite 4.0. Key libraries include Tailwind CSS 3.3, Headless UI, Zustand for state management, React Query (TanStack Query) for data fetching, React Router 6 for navigation, React Hook Form with Zod for forms, and Axios for HTTP requests.
-- **Objective:** To deliver a fully functional API Playground instance adhering to the project's core requirements, emphasizing the streamlined technology stack defined in `docs/Stacks.md` for efficient development and deployment. `common_foundations.md` is not a specified source of truth; primary references are `YellowPaper.md` and `Stacks.md`.
+- **Objective:** To deliver a fully functional API Playground instance adhering to the project's core requirements, emphasizing the streamlined technology stack defined in `docs/Tech-Stacks/Technology Stacks.md` for efficient development and deployment. `common_foundations.md` is not a specified source of truth; primary references are `docs/Specs/Yellow Paper.md` and `docs/Tech-Stacks/Technology Stacks.md`.
 
 ---
 
@@ -311,7 +310,7 @@ erDiagram
     endpoints ||--o{ request_logs : logs
 ```
 
-**Explanation:** The diagram illustrates a hierarchical relationship where users own multiple collections, each collection contains multiple endpoints, and each endpoint is linked to multiple request logs. This structure ensures traceability of API interactions and aligns with the shared data model described in `data_model_reference.md`.
+**Explanation:** The diagram illustrates a hierarchical relationship where users own multiple collections, each collection contains multiple endpoints, and each endpoint is linked to multiple request logs. This structure ensures traceability of API interactions and aligns with the shared data model described in `../../Models/Data Models.md`.
 
 ---
 
@@ -337,7 +336,7 @@ The following key workflows are implemented to handle asynchronous tasks and ser
 
 ## 8. Authentication & Security Patterns
 
-Security measures align with `YellowPaper.md` and are implemented using specific Django tools from `docs/Stacks.md`.
+Security measures align with `../../Specs/Yellow Paper.md` and are implemented using specific Django tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 - **JWT Authentication (`django-rest-framework-simplejwt`):**
   - Handles token-based authentication (access and refresh tokens).
@@ -367,7 +366,7 @@ Security measures align with `YellowPaper.md` and are implemented using specific
 
 ## 9. API Design Conventions & Documentation
 
-- **API Specification:** Endpoints adhere to `docs/Endpoints.md`.
+- **API Specification:** Endpoints adhere to `../../API-Reference/` (once populated).
 - **Documentation Generation (`drf-spectacular`):**
   - Used to generate an OpenAPI 3.0 schema and Swagger UI for the API. This provides interactive documentation.
 - **Versioning:** API will be versioned (e.g., `/api/v1/`).
@@ -394,7 +393,7 @@ The React frontend architecture is detailed in section 5 ("Domain-Driven Design 
 
 ## 11. Deployment Topology
 
-Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`.
+Deployment strategy aligns with `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md`.
 
 **Development Environment (Docker Compose):**
 - **Orchestration:** `docker-compose.yml` defines services for:
@@ -457,7 +456,7 @@ This diagram illustrates Nginx serving static React files (potentially via CDN) 
 
 ## 12. Testing Strategy
 
-Testing adheres to `YellowPaper.md` guidelines and uses stack-specific tools from `docs/Stacks.md`.
+Testing adheres to `../../Specs/Yellow Paper.md` guidelines and uses stack-specific tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 **Backend (Python/Django):**
 - **Unit Tests (`pytest-django`):**
@@ -479,7 +478,7 @@ Testing adheres to `YellowPaper.md` guidelines and uses stack-specific tools fro
 - **API Mocking (`msw` - Mock Service Worker):**
     - Intercept HTTP requests made by the frontend during tests and return mock responses. This allows testing of data fetching logic, state updates, and UI rendering based on API responses without actual backend calls.
 - **End-to-End Tests (Future Consideration, e.g., Playwright/Cypress):**
-    - As specified in `YellowPaper.md`, full E2E tests covering user journeys. For the simplified stack, focus is on unit/integration for frontend and backend first.
+    - As specified in `../../Specs/Yellow Paper.md`, full E2E tests covering user journeys. For the simplified stack, focus is on unit/integration for frontend and backend first.
 
 **CI/CD (`GitHub Actions`):**
 - All tests (backend and frontend) will be run automatically on every push and pull request to ensure code quality and prevent regressions.

@@ -69,7 +69,7 @@ graph TB
     end
 ```
 
-*Note: The "Background Workers," "Message Queue," and "Rate Limiter" components depicted here represent the mature architectural vision. Initial stack implementations will feature simplified, in-process versions of these capabilities as detailed in `docs/Stacks.md`.*
+*Note: The "Background Workers," "Message Queue," and "Rate Limiter" components depicted here represent the mature architectural vision. Initial stack implementations will feature simplified, in-process versions of these capabilities as detailed in `../Tech-Stacks/Technology Stacks.md`.*
 
 ### Component Architecture
 

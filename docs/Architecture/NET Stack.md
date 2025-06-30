@@ -1,7 +1,6 @@
-
 # API Playground - C# / .NET Stack Architecture 🟣
 
-This document provides a detailed technical reference for the C# / .NET implementation of the API Playground application, featuring an ASP.NET Core backend and a Blazor WebAssembly (WASM) frontend. It aligns with the specifications in `docs/YellowPaper.md` and the simplified technology stack defined in `docs/Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment, and testing for this stack.
+This document provides a detailed technical reference for the C# / .NET implementation of the API Playground application, featuring an ASP.NET Core backend and a Blazor WebAssembly (WASM) frontend. It aligns with the specifications in `../../Specs/Yellow Paper.md` and the simplified technology stack defined in `../../Tech-Stacks/Technology Stacks.md`. This guide covers the precise system architecture, component responsibilities, dependencies, folder structure, security patterns, deployment, and testing for this stack.
 
 ---
 
@@ -9,10 +8,10 @@ This document provides a detailed technical reference for the C# / .NET implemen
 
 This implementation utilizes .NET 8 for both the backend (ASP.NET Core Web API) and frontend (Blazor WASM). The backend leverages Entity Framework Core 8.0 for data access to a PostgreSQL 15 database. Authentication is handled by ASP.NET Core Identity coupled with JWT Bearer tokens. The focus is on a cohesive .NET ecosystem, delivering a type-safe, performant, and maintainable solution.
 
-**Stack Highlights (as per `docs/Stacks.md`):**
+**Stack Highlights (as per `../../Tech-Stacks/Technology Stacks.md`):**
 - **Backend:** .NET 8 Web API (ASP.NET Core) for core logic, Entity Framework Core 8.0 for ORM against PostgreSQL 15, ASP.NET Core Identity for user management, JWT Bearer tokens for API security, and `AspNetCoreRateLimit` for rate limiting. API documentation is via Swashbuckle. Task processing will initially use ASP.NET Core `BackgroundService`.
 - **Frontend:** Blazor WebAssembly, leveraging .NET runtime in the browser. UI will be built using Blazor Bootstrap or a similar component library. State management and HTTP client interactions are handled using Blazor's built-in features.
-- **Objective:** To deliver a fully functional API Playground instance using the .NET stack, adhering to project core requirements and the streamlined technology choices in `docs/Stacks.md`. The reference to `common_foundations.md` is incorrect; `YellowPaper.md` and `Stacks.md` are the primary sources.
+- **Objective:** To deliver a fully functional API Playground instance using the .NET stack, adhering to project core requirements and the streamlined technology choices in `../../Tech-Stacks/Technology Stacks.md`. The reference to `common_foundations.md` is incorrect; `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md` are the primary sources.
 
 ---
 
@@ -132,7 +131,7 @@ flowchart TB
 
 ## 3. Component Responsibilities
 
-Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper.md`:
+Component responsibilities are defined by `../../Tech-Stacks/Technology Stacks.md` and `../../Specs/Yellow Paper.md`:
 
 - **Blazor WebAssembly Frontend (.NET 8):**
   - Builds the client-side Single-Page Application (SPA) that runs directly in the user's browser using WebAssembly.
@@ -157,7 +156,7 @@ Component responsibilities are defined by `docs/Stacks.md` and `docs/YellowPaper
 
 ## 4. Dependencies
 
-Key dependencies are specified in `docs/Stacks.md`. Versions should be pinned in the `.csproj` files.
+Key dependencies are specified in `../../Tech-Stacks/Technology Stacks.md`. Versions should be pinned in the `.csproj` files.
 
 **Backend (.NET 8 Web API):**
 | Package                                   | Version      | Purpose                                         |
@@ -245,7 +244,7 @@ ApiPlayground.sln
 
 ## 6. Entity-Relationship (ER) Diagram
 
-The core data model is defined by `YellowPaper.md` and implemented using Entity Framework Core with code-first migrations, targeting PostgreSQL.
+The core data model is defined by `../../Specs/Yellow Paper.md` and implemented using Entity Framework Core with code-first migrations, targeting PostgreSQL.
 
 ```mermaid
 %%{init: {
@@ -359,14 +358,14 @@ erDiagram
 
 **Explanation:**
 -   ASP.NET Core Identity tables (`User`, `Role`, `UserRole`, etc.) manage users and roles. `User` is extended with `FirstName` and `LastName`.
--   `Collection`, `Endpoint`, and `RequestLog` follow the structure defined in `YellowPaper.md` and `docs/Endpoints.md`. JSON fields (e.g., `TagsJson`, `HeadersJson`) are used for simplicity; for complex querying on these, separate related tables might be considered in a more mature version.
+-   `Collection`, `Endpoint`, and `RequestLog` follow the structure defined in `../../Specs/Yellow Paper.md` and `../../API-Reference/` (once populated). JSON fields (e.g., `TagsJson`, `HeadersJson`) are used for simplicity; for complex querying on these, separate related tables might be considered in a more mature version.
 -   Relationships are established: User to Collections, Collection to Endpoints, User/Endpoint to RequestLogs.
 
 ---
 
 ## 7. Service & Background Task Flows (Simplified)
 
-As per `docs/Stacks.md`, complex asynchronous processing (like Hangfire) is deferred. Core API request execution will be handled by ASP.NET Core controllers, potentially using `IHttpClientFactory` for outgoing HTTP calls. Background tasks will use `BackgroundService`.
+As per `../../Tech-Stacks/Technology Stacks.md`, complex asynchronous processing (like Hangfire) is deferred. Core API request execution will be handled by ASP.NET Core controllers, potentially using `IHttpClientFactory` for outgoing HTTP calls. Background tasks will use `BackgroundService`.
 
 -   **API Request Execution Flow (`POST /api/test/{endpoint_id}/` or ad-hoc):**
     1.  **Client Request (Blazor WASM):** The Blazor frontend sends an API execution request to the ASP.NET Core backend.
@@ -393,7 +392,7 @@ As per `docs/Stacks.md`, complex asynchronous processing (like Hangfire) is defe
 
 ## 8. Authentication & Security Patterns
 
-Security measures align with `YellowPaper.md` and are implemented using ASP.NET Core features and libraries specified in `docs/Stacks.md`.
+Security measures align with `../../Specs/Yellow Paper.md` and are implemented using ASP.NET Core features and libraries specified in `../../Tech-Stacks/Technology Stacks.md`.
 
 -   **ASP.NET Core Identity:**
     *   Manages user accounts (registration, login, password hashing, email confirmation, etc.).
@@ -424,7 +423,7 @@ Security measures align with `YellowPaper.md` and are implemented using ASP.NET 
 
 ## 9. API Design Conventions & Documentation
 
--   **API Specification:** Adheres to `docs/Endpoints.md`.
+-   **API Specification:** Adheres to `../../API-Reference/` (once populated).
 -   **Documentation Generation (`Swashbuckle.AspNetCore`):**
     *   Generates OpenAPI 3.0 schema and Swagger UI for interactive API documentation.
 -   **Versioning:** API versioning (e.g., `/api/v1/`) will be implemented.
@@ -457,7 +456,7 @@ The Blazor WebAssembly frontend architecture is detailed in section 5 ("Project 
 
 ## 11. Deployment Topology
 
-Deployment strategy aligns with `YellowPaper.md` and `docs/Stacks.md`.
+Deployment strategy aligns with `../../Specs/Yellow Paper.md` and `../../Tech-Stacks/Technology Stacks.md`.
 
 **Development Environment (Visual Studio / .NET CLI + Docker Compose):**
 -   **ASP.NET Core API:** Run using Kestrel, often launched from Visual Studio or `dotnet run`.
@@ -524,7 +523,7 @@ graph TD
 
 ## 12. Testing Strategy
 
-Testing adheres to `YellowPaper.md` and uses .NET stack-specific tools from `docs/Stacks.md`.
+Testing adheres to `../../Specs/Yellow Paper.md` and uses .NET stack-specific tools from `../../Tech-Stacks/Technology Stacks.md`.
 
 **Backend (ASP.NET Core API):**
 -   **Unit Tests (`xUnit`, `Moq`):**

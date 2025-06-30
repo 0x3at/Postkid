@@ -28,7 +28,7 @@ This project aims to:
 - Adhere to rapid development cycles for each stack.
 - Promote containerized deployments.
 
-For a deep dive into the project's technical specifications, motivations, and acceptance criteria, please refer to the [**Project Yellow Paper (`docs/YellowPaper.md`)**](./docs/YellowPaper.md).
+For a deep dive into the project's technical specifications, motivations, and acceptance criteria, please refer to the [**Project Yellow Paper (`docs/Specs/Yellow Paper.md`)**](./docs/Specs/Yellow%20Paper.md).
 
 ## Core Features
 
@@ -41,10 +41,10 @@ For a deep dive into the project's technical specifications, motivations, and ac
 
 ## Architectural Overview
 
-The Postkid: API Playground follows a modular, multi-stack architecture. While each stack implementation is independent, they all adhere to common principles outlined in `docs/YellowPaper.md` and `docs/architecture/readme.md`. Key shared aspects include:
+The Postkid: API Playground follows a modular, multi-stack architecture. While each stack implementation is independent, they all adhere to common principles outlined in `docs/Specs/Yellow Paper.md` and `docs/Architecture/Overall Architecture.md`. Key shared aspects include:
 
-- **Shared API Specification**: All backends expose the same API contract, detailed in [`docs/Endpoints.md`](./docs/Endpoints.md).
-- **Unified Conceptual Data Model**: A consistent data structure is targeted by all stacks, connecting to a shared PostgreSQL database. Details on the data model can be found in the [Data Model Overview section of the Architecture README](./docs/architecture/readme.md#4-data-model-overview).
+- **Shared API Specification**: All backends expose the same API contract, detailed in the [`docs/API-Reference/`](./docs/API-Reference/) directory.
+- **Unified Conceptual Data Model**: A consistent data structure is targeted by all stacks, connecting to a shared PostgreSQL database. Details on the data model can be found in the [Data Model Overview section of the Overall Architecture document](./docs/Architecture/Overall%20Architecture.md#4-data-model-overview).
 - **Containerization**: Each stack (backend and frontend) is designed to be run in Docker containers.
 - **Gateway Pattern**: Production deployments typically involve an API Gateway (e.g., Nginx) for routing, SSL termination, and load balancing.
 
@@ -89,33 +89,33 @@ graph TD
     style H fill:#bb9af7,stroke:#9d7cd8
 ```
 
-For a comprehensive architectural overview, including shared design principles, detailed workflow diagrams, and individual stack documentation, please visit the [**Architecture Documentation Hub (`docs/architecture/readme.md`)**](./docs/architecture/readme.md).
+For a comprehensive architectural overview, including shared design principles, detailed workflow diagrams, and individual stack documentation, please visit the [**Overall Architecture Document (`docs/Architecture/Overall Architecture.md`)**](./docs/Architecture/Overall%20Architecture.md).
 
 ## Technology Stacks
 
-This project implements the Postkid: API Playground using several distinct technology stacks. The definitive list and specifications for these stacks are maintained in [`docs/Stacks.md`](./docs/Stacks.md).
+This project implements the Postkid: API Playground using several distinct technology stacks. The definitive list and specifications for these stacks are maintained in [`docs/Tech-Stacks/Technology Stacks.md`](./docs/Tech-Stacks/Technology%20Stacks.md).
 
 ### Implemented Stacks
 
 1.  **Python/Django + React**:
     *   Backend: Django 5.0, Django REST Framework 3.14
     *   Frontend: React 18, TypeScript 5.0, Vite 4.0
-    *   Detailed Architecture: [`docs/architecture/django.md`](./docs/architecture/django.md)
+    *   Detailed Architecture: [`docs/Architecture/Python Django Stack.md`](./docs/Architecture/Python%20Django%20Stack.md)
 2.  **Java/Spring Boot + Angular**:
     *   Backend: Spring Boot 3.2, Spring Data JPA, Spring Security 6
     *   Frontend: Angular 17, TypeScript 5.0
-    *   Detailed Architecture: [`docs/architecture/springboot.md`](./docs/architecture/springboot.md)
+    *   Detailed Architecture: [`docs/Architecture/Java Spring Boot Stack.md`](./docs/Architecture/Java%20Spring%20Boot%20Stack.md)
 3.  **C#/.NET + Blazor WASM**:
     *   Backend: .NET 8 Web API (ASP.NET Core)
     *   Frontend: Blazor WebAssembly (.NET 8)
-    *   Detailed Architecture: [`docs/architecture/dotnet.md`](./docs/architecture/dotnet.md)
+    *   Detailed Architecture: [`docs/Architecture/NET Stack.md`](./docs/Architecture/NET%20Stack.md)
 4.  **Node.js/Express + Next.js**:
     *   Backend: Node.js 20, Express.js 4.18, TypeScript, Prisma 5.0
     *   Frontend: Next.js 14 (App Router), TypeScript
-    *   Detailed Architecture: [`docs/architecture/next.md`](./docs/architecture/next.md)
+    *   Detailed Architecture: [`docs/Architecture/Node-js TypeScript Stack.md`](./docs/Architecture/Node-js%20TypeScript%20Stack.md)
 
 ### Stack Comparison
-For a detailed side-by-side comparison of these technology stacks, including frameworks, ORMs, authentication methods, testing tools, and more, please refer to the [**Technology Stack Comparison Table in the Architecture README**](./docs/architecture/readme.md#6-technology-stack-comparison).
+For a detailed side-by-side comparison of these technology stacks, including frameworks, ORMs, authentication methods, testing tools, and more, please refer to the [**Technology Stack Comparison Table in the Overall Architecture document**](./docs/Architecture/Overall%20Architecture.md#6-technology-stack-comparison).
 
 ## Getting Started
 
@@ -135,7 +135,7 @@ Each technology stack is self-contained and can be run independently using Docke
     cd api-playground
     ```
 2.  **Navigate to a specific stack's directory or the root (if using a monorepo with top-level compose files for each stack):**
-    The project structure may involve individual `docker-compose.yml` files per stack (e.g., `stacks/django-react/docker-compose.yml`) or a centralized management system if set up as a monorepo. Refer to the specific setup instructions that will accompany each stack's implementation. A conceptual example based on `docs/YellowPaper.md`:
+    The project structure may involve individual `docker-compose.yml` files per stack (e.g., `stacks/django-react/docker-compose.yml`) or a centralized management system if set up as a monorepo. Refer to the specific setup instructions that will accompany each stack's implementation. A conceptual example based on `docs/Specs/Yellow Paper.md`:
     ```sh
     # Example: If docker-compose.yml is at the root for a specific stack configuration
     # (or navigate to the stack's directory if they are separate)
@@ -155,10 +155,10 @@ Each technology stack is self-contained and can be run independently using Docke
 ## Documentation Hub
 
 All project documentation, including technical specifications, architectural details, and API definitions, can be found in the [`/docs`](./docs/) directory.
-- [**Project Yellow Paper (`docs/YellowPaper.md`)**](./docs/YellowPaper.md): Core concepts, features, requirements, and high-level architecture.
-- [**Technology Stacks Definition (`docs/Stacks.md`)**](./docs/Stacks.md): Precise definition of technologies used in each stack.
-- [**API Endpoints Specification (`docs/Endpoints.md`)**](./docs/Endpoints.md): Detailed API contract common to all backends.
-- [**Architecture Overview & Detailed Stack Architectures (`docs/architecture/readme.md`)**](./docs/architecture/readme.md): Central hub for architectural discussions, comparisons, and links to individual stack architecture documents.
+- [**Project Yellow Paper (`docs/Specs/Yellow Paper.md`)**](./docs/Specs/Yellow%20Paper.md): Core concepts, features, requirements, and high-level architecture.
+- [**Technology Stacks Definition (`docs/Tech-Stacks/Technology Stacks.md`)**](./docs/Tech-Stacks/Technology%20Stacks.md): Precise definition of technologies used in each stack.
+- [**API Reference (`docs/API-Reference/`)**](./docs/API-Reference/): Detailed API contract common to all backends.
+- [**Overall Architecture & Detailed Stack Architectures (`docs/Architecture/Overall Architecture.md`)**](./docs/Architecture/Overall%20Architecture.md): Central hub for architectural discussions, comparisons, and links to individual stack architecture documents.
 
 ## Contributing
 

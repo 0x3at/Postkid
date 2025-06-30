@@ -1,12 +1,11 @@
-
 # API Playground - Architecture Overview
 
 This document serves as the central point for understanding the architecture of the API Playground application across its various technology stack implementations. It provides links to detailed architecture documents for each stack, outlines shared principles, and offers a comparative overview.
 
 The primary sources of truth for requirements and technology choices are:
--   `docs/YellowPaper.md`: Defines the overall project, its features, and acceptance criteria.
--   `docs/Stacks.md`: Specifies the precise technologies for each implemented stack.
--   `docs/Endpoints.md`: Details the common API specification.
+-   `docs/Specs/Yellow Paper.md`: Defines the overall project, its features, and acceptance criteria.
+-   `docs/Tech-Stacks/Technology Stacks.md`: Specifies the precise technologies for each implemented stack.
+-   `docs/API-Reference/`: Details the common API specification (once populated).
 
 ---
 
@@ -27,30 +26,30 @@ The primary sources of truth for requirements and technology choices are:
 
 Detailed architecture for each implemented stack can be found in their respective documents:
 
--   **Python/Django + React:** [`./django.md`](./django.md)
--   **C#/.NET + Blazor WASM:** [`./dotnet.md`](./dotnet.md)
--   **Node.js/TypeScript (Express.js + Next.js):** [`./next.md`](./next.md)
--   **Java/Spring Boot + Angular:** [`./springboot.md`](./springboot.md)
+-   **Python/Django + React:** [`./Python Django Stack.md`](./Python%20Django%20Stack.md)
+-   **C#/.NET + Blazor WASM:** [`./NET Stack.md`](./NET%20Stack.md)
+-   **Node.js/TypeScript (Express.js + Next.js):** [`./Node-js TypeScript Stack.md`](./Node-js%20TypeScript%20Stack.md)
+-   **Java/Spring Boot + Angular:** [`./Java Spring Boot Stack.md`](./Java%20Spring%20Boot%20Stack.md)
 
-*Note: The Go stack mentioned in previous versions of this document is not part of the currently defined implementations in `docs/Stacks.md`.*
+*Note: The Go stack mentioned in previous versions of this document is not part of the currently defined implementations in `docs/Tech-Stacks/Technology Stacks.md`.*
 
 ---
 
 ## 2. Shared Design Principles
 
-These principles, derived primarily from `docs/YellowPaper.md`, guide the development of all stack implementations to ensure consistency and quality:
+These principles, derived primarily from `docs/Specs/Yellow Paper.md`, guide the development of all stack implementations to ensure consistency and quality:
 
--   **Consistency:** All stacks must implement the features and API endpoints (`docs/Endpoints.md`) as defined in `docs/YellowPaper.md` to ensure identical functionality and user experience.
+-   **Consistency:** All stacks must implement the features and API endpoints (as will be detailed in `docs/API-Reference/`) as defined in `docs/Specs/Yellow Paper.md` to ensure identical functionality and user experience.
 -   **Modularity:** Codebases should be organized logically (e.g., following Domain-Driven Design principles where appropriate, or standard conventions for the framework) to promote maintainability and separation of concerns.
 -   **Security:**
     -   Robust authentication (JWT-based) and authorization mechanisms are mandatory.
     -   Rate limiting must be implemented to prevent abuse.
     -   Input validation is critical on all incoming data.
     -   Protection against common web vulnerabilities (XSS, CSRF, SSRF) must be considered and implemented.
--   **Simplified Task Processing (Initial Scope):** As per `docs/Stacks.md`, complex background task queues (Celery, RabbitMQ, Bull, Hangfire) are deferred. Initial implementations will use simpler, in-process asynchronous mechanisms native to each stack (e.g., Spring `@Async`, ASP.NET `BackgroundService`, Django `BackgroundTasks`, simple Node.js async patterns).
--   **Performance:** While full optimization is iterative, applications should be responsive. API response times and frontend load times are key considerations (see `YellowPaper.md` for targets).
+-   **Simplified Task Processing (Initial Scope):** As per `docs/Tech-Stacks/Technology Stacks.md`, complex background task queues (Celery, RabbitMQ, Bull, Hangfire) are deferred. Initial implementations will use simpler, in-process asynchronous mechanisms native to each stack (e.g., Spring `@Async`, ASP.NET `BackgroundService`, Django `BackgroundTasks`, simple Node.js async patterns).
+-   **Performance:** While full optimization is iterative, applications should be responsive. API response times and frontend load times are key considerations (see `docs/Specs/Yellow Paper.md` for targets).
 -   **Testability:** Each stack must include a comprehensive testing strategy, covering unit, integration, and (conceptually) end-to-end tests.
--   **Containerization:** All implementations are designed to be deployed via Docker containers, as outlined in `docs/YellowPaper.md`.
+-   **Containerization:** All implementations are designed to be deployed via Docker containers, as outlined in `docs/Specs/Yellow Paper.md`.
 -   **API Documentation:** Each backend API must be documented using OpenAPI 3.0 standards (e.g., Swashbuckle, drf-spectacular, SpringDoc, Swagger JSDoc).
 -   **Database:** PostgreSQL 15 is the shared relational database.
 -   **Configuration:** Sensitive configurations should be managed via environment variables.
@@ -106,13 +105,13 @@ graph TD
 -   **External API Call:** Represents the execution of user-defined API requests to third-party services.
 -   **Logging Service/Mechanism:** For recording application events, errors, and request history.
 
-**Note on Background Workers:** The "Background Workers" concept from `YellowPaper.md` is simplified in the initial implementations to in-process asynchronous tasks within the Backend API Service.
+**Note on Background Workers:** The "Background Workers" concept from `docs/Specs/Yellow Paper.md` is simplified in the initial implementations to in-process asynchronous tasks within the Backend API Service.
 
 ---
 
 ## 4. Data Model Overview
 
-The core data model is consistent across all stacks to ensure functional parity and is primarily defined by the requirements in `docs/YellowPaper.md` and the API specification in `docs/Endpoints.md`. Key entities include:
+The core data model is consistent across all stacks to ensure functional parity and is primarily defined by the requirements in `docs/Specs/Yellow Paper.md` and the API specification (once populated in `docs/API-Reference/`). Key entities include:
 
 -   **User:** Represents registered users of the platform.
     -   Key attributes: `id`, `email`, `password_hash`, `first_name`, `last_name`, timestamps.
@@ -165,7 +164,7 @@ classDiagram
       +Int duration_ms
     }
 ```
-*Detailed ER diagrams and model definitions are available in each stack-specific architecture document.*
+*Detailed ER diagrams and model definitions are available in each stack-specific architecture document and in `docs/Models/Data Models.md`.*
 
 ---
 
@@ -175,7 +174,7 @@ These diagrams illustrate key workflows common to all stacks, adapted for the si
 
 ### 5.1. Authentication Handshake
 
-(As per `YellowPaper.md` JWT Strategy)
+(As per `docs/Specs/Yellow Paper.md` JWT Strategy)
 ```mermaid
 %%{init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#7aa2f7', 'primaryTextColor': '#1a1b26', 'lineColor': '#bb9af7', 'background': '#1a1b26', 'mainBkg': '#1a1b26'}}}%%
 sequenceDiagram
@@ -233,11 +232,11 @@ sequenceDiagram
 
 ## 6. Technology Stack Comparison
 
-This table provides a high-level comparison of the core technologies used in each implemented stack, based on `docs/Stacks.md`.
+This table provides a high-level comparison of the core technologies used in each implemented stack, based on `docs/Tech-Stacks/Technology Stacks.md`.
 
 | Feature                       | Python/Django + React                                   | C#/.NET + Blazor WASM                                     | Node.js/Express + Next.js                                | Java/Spring Boot + Angular                                       |
 | :---------------------------- | :------------------------------------------------------ | :-------------------------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------------- |
-| **Stack Name (Docs)**       | `django.md`                                             | `dotnet.md`                                               | `next.md`                                                | `springboot.md`                                                  |
+| **Stack Name (Docs)**       | `Python Django Stack.md`                                | `NET Stack.md`                                            | `Node-js TypeScript Stack.md`                            | `Java Spring Boot Stack.md`                                      |
 | **Backend Framework**         | Django 5.0, Django REST Framework 3.14                  | .NET 8 Web API (ASP.NET Core)                             | Express.js 4.18 (Node.js 20, TypeScript)                 | Spring Boot 3.2 (Spring Web, Java)                               |
 | **Frontend Framework**        | React 18 (TypeScript 5.0, Vite 4.0)                     | Blazor WebAssembly (.NET 8)                               | Next.js 14 (App Router, TypeScript)                      | Angular 17 (TypeScript 5.0)                                      |
 | **Database ORM/Access**     | Django ORM (with psycopg3)                              | Entity Framework Core 8.0 (Npgsql)                        | Prisma 5.0 ORM                                           | Spring Data JPA (Hibernate 6.2, HikariCP)                        |
@@ -256,5 +255,3 @@ This table provides a high-level comparison of the core technologies used in eac
 | **Configuration (Backend)**   | `python-decouple` / Env Vars                            | `appsettings.json` / Env Vars                             | `dotenv` / Env Vars                                      | `application.yml` / Env Vars                                     |
 
 This table provides a snapshot of the primary tools and libraries for each stack as defined for the initial, simplified implementation phase.
-```
-
