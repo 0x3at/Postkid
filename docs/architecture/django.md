@@ -206,25 +206,59 @@ The project follows a Domain-Driven Design (DDD) approach to organize code into 
 
 ### Backend (Django)
 ```text
-api_playground/
-├── apps/                      # Application-specific modules
-│   ├── authentication/        # User auth logic and models
-│   ├── collections/           # Collection management logic
-│   ├── environments/          # Environment variables for API testing
-│   ├── history/               # Request logs and history tracking
-│   ├── proxy/                 # API proxying logic for external calls
-│   └── codegen/               # Tools for generating client SDKs
-├── core/                      # Shared utilities and base components
-│   ├── models/                # Base models and mixins
-│   ├── serializers/           # Common serializers for DRF
-│   ├── permissions/           # Custom permission classes
-│   ├── middleware/            # Request/response middleware (logging, rate-limiting)
-│   └── utils/                 # Helper functions and utilities
-├── config/                    # Configuration files
-│   ├── settings/              # Django settings (dev, prod, test)
-│   ├── urls.py                # URL routing configuration
+Postkid/
+├── Postkid/           # Main project package
+│   ├── __init__.py
+│   ├── settings/              # Project settings
+│   │   ├── __init__.py
+│   │   ├── base.py            # Common settings
+│   │   ├── development.py     # Development-specific settings
+│   │   ├── production.py      # Production-specific settings
+│   │   └── test.py            # Test-specific settings
+│   ├── urls.py                # Root URL configuration
+│   ├── asgi.py                # ASGI configuration
+│   └── wsgi.py                # WSGI configuration
+├── apps/                      # Django applications
+│   ├── authentication/        # User authentication app
+│   │   ├── __init__.py
+│   │   ├── models.py          # Models
+│   │   ├── views.py           # Views
+│   │   ├── serializers.py     # DRF serializers
+│   │   ├── urls.py            # App-specific URLs
+│   │   ├── admin.py           # Admin configuration
+│   │   ├── forms.py           # Forms (if needed)
+│   │   ├── tests.py           # Tests
+│   │   └── apps.py            # App configuration
+│   ├── collections/           # Collection management app
+│   │   └── ...                # (Similar structure to authentication)
+│   ├── environments/          # Environment variables app
+│   │   └── ...
+│   ├── history/               # Request logs and history tracking app
+│   │   └── ...
+│   ├── proxy/                 # API proxying logic app
+│   │   └── ...
+│   └── codegen/               # Client SDK generation app
+│       └── ...
+├── core/                      # Reusable components and utilities
+│   ├── models/                # Abstract base models
+│   │   ├── __init__.py
+│   │   └── base_model.py      # Example: TimeStampedModel
+│   ├── serializers/           # Custom serializers
+│   │   ├── __init__.py
+│   │   └── base_serializer.py # Example: BaseSerializer
+│   ├── permissions/           # Custom permissions
+│   │   ├── __init__.py
+│   │   └── custom_permissions.py
+│   ├── middleware/            # Custom middleware
+│   │   ├── __init__.py
+│   │   └── request_logging.py
+│   └── utils/                 # Utility functions
+│       ├── __init__.py
+│       └── helpers.py         # Example: utility functions
+├── config/                    # Project-level configuration
 │   └── celery.py              # Celery configuration
-└── static/                    # Static assets (if not served via CDN)
+├── static/                    # Static files
+└── manage.py                  # Django management script
 ```
 
 ### Frontend (React)
